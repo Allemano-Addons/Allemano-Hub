@@ -9,6 +9,9 @@ local LIST_W = 470
 
 local function hexColor(hex) return Theme.Hex(hex) end
 
+-- Errors are rebuilt on every refresh, so the selection is remembered by a key that identifies one error.
+local function keyOf(item) return item.addon.id .. "|" .. item.t .. "|" .. item.where .. "|" .. #item.msg end
+
 -- ---------------------------------------------------------------------------
 -- List rows
 -- ---------------------------------------------------------------------------
@@ -33,14 +36,14 @@ local function createRow(list)
     row.msg:SetPoint("RIGHT", row, "RIGHT", -22, 0)
     row:SetScript("OnClick", function(self)
         local page = self.page
-        page.selected = self.item
+        page.selectedKey = keyOf(self.item)
         page:Refresh()
     end)
     row:SetScript("OnEnter", function(self)
-        if self.item ~= self.page.selected then self.bg:SetAlpha(0.5) self.bg:Show() end
+        if keyOf(self.item) ~= self.page.selectedKey then self.bg:SetAlpha(0.5) self.bg:Show() end
     end)
     row:SetScript("OnLeave", function(self)
-        if self.item ~= self.page.selected then self.bg:Hide() end
+        if keyOf(self.item) ~= self.page.selectedKey then self.bg:Hide() end
     end)
     return row
 end
@@ -54,7 +57,7 @@ local function updateRow(row, item, page)
     row.where:SetText(item.where)
     row.msg:SetText((item.msg:gsub("%s+", " ")))
     row.bg:SetAlpha(1)
-    row.bg:SetShown(item == page.selected)
+    row.bg:SetShown(keyOf(item) == page.selectedKey)
 end
 
 -- ---------------------------------------------------------------------------
@@ -91,7 +94,7 @@ Window.pages.errors = {
             armed = false
             page.clear:Configure("Clear all", "plain")
             Registry:ClearErrors()
-            page.selected = nil
+            page.selectedKey = nil
             Window:Refresh()
         end)
 
@@ -142,15 +145,18 @@ Window.pages.errors = {
                 ("%d error%s from %d addon%s"):format(#errors, #errors > 1 and "s" or "", addons, addons > 1 and "s" or ""))
 
             -- keep the selection if it is still there, else the newest
-            local found
-            for _, e in ipairs(errors) do if e == self.selected then found = true end end
-            if not found then self.selected = errors[1] end
+            local selected
+            for _, err in ipairs(errors) do if keyOf(err) == self.selectedKey then selected = err end end
+            if not selected then
+                selected = errors[1]
+                self.selectedKey = selected and keyOf(selected) or nil
+            end
 
             self.list:SetData(errors, true)
             self.empty:SetShown(#errors == 0)
             self.detail:SetShown(#errors > 0)
             self.clear:SetShown(#errors > 0)
-            local e = self.selected
+            local e = selected
             if e then
                 local r, g, b = hexColor(e.addon.color)
                 d.addon:SetText(strupper(e.addon.name .. (e.v and (" v" .. tostring(e.v)) or "")))

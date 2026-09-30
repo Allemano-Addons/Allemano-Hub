@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 – 2026-09-30
+- Fix: an error in the list could not be selected (the page rebuilt the list on every refresh and forgot the
+  selection); clicking a row now shows that error on the right and keeps it selected.
+
+
 ## 0.3.0 – 2026-09-30
 - Errors page: every error the Allemano addons recorded, newest first, the selected one in full, and a
   "Copy report" button that opens a report (game and addon versions, other loaded addons and all errors) to copy

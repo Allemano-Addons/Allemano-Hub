@@ -228,6 +228,9 @@ function Window:Select(key)
     self:RefreshNav()
 end
 
+-- The built page for a key (used by tests).
+function Window.Page(key) return built[key] end
+
 function Window:Refresh()
     if not frame or not frame:IsShown() then return end
     local page = current and built[current]
