@@ -18,34 +18,34 @@ Registry.URL = {
 -- the addon's error list, one line about it. `main` = shown in the sidebar and on the overview;
 -- the other Hush modules (`module = "hush"`) get their own place on Hush's page later.
 Registry.known = {
-    { id = "hush", folder = "Hush", name = "Hush", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", main = true,
+    { id = "hush", key = "HUSH", folder = "Hush", name = "Hush", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", main = true,
       slash = "/hush", settings = "settings", cf = 1719062, sv = "HushDB",
       blurb = "Whisper messenger with popups, saved messages and alt chats" },
-    { id = "altboard", folder = "AltBoard", name = "AltBoard", label = "CHARACTERS", color = "5B8CFF", mark = "altboard", main = true,
+    { id = "altboard", key = "ALTBOARD", folder = "AltBoard", name = "AltBoard", label = "CHARACTERS", color = "5B8CFF", mark = "altboard", main = true,
       slash = "/ab", settings = "settings", cf = 1719158, sv = "AltBoardDB",
       blurb = "All your characters on one board" },
-    { id = "art", folder = "AllemanoRaidTools", name = "ART", fullName = "Allemano Raid Tools", label = "RAID TOOLS", color = "E5484D", mark = "art", main = true,
+    { id = "art", key = "ALLEMANORAIDTOOLS", folder = "AllemanoRaidTools", name = "ART", fullName = "Allemano Raid Tools", label = "RAID TOOLS", color = "E5484D", mark = "art", main = true,
       slash = "/art", cf = 1719141, sv = "AllemanoRaidToolsDB",
       blurb = "Notes, raid check, invites, marks and timers for raids" },
-    { id = "session-tracker", folder = "SessionTracker", name = "Session Tracker", label = "UTILITY", color = "E8A93B", mark = "session", main = true,
+    { id = "session-tracker", key = "SESSIONTRACKER", folder = "SessionTracker", name = "Session Tracker", label = "UTILITY", color = "E8A93B", mark = "session", main = true,
       slash = "/session", settings = "settings", cf = 1719167, sv = "SessionTrackerDB",
       blurb = "Gold, XP and time for this session, and level times" },
-    { id = "craftboard", folder = "CraftBoard", name = "CraftBoard", label = "PROFESSIONS", color = "F0763A", mark = "craftboard", main = true,
+    { id = "craftboard", key = "CRAFTBOARD", folder = "CraftBoard", name = "CraftBoard", label = "PROFESSIONS", color = "F0763A", mark = "craftboard", main = true,
       slash = "/cb", settings = "settings", cf = 1719025, sv = "CraftBoardDB",
       blurb = "Who in your guild can craft what" },
-    { id = "alc", folder = "ArbiterLootCouncil", name = "ALC", fullName = "Arbiter Loot Council", label = "LOOT COUNCIL", color = "45C97E", mark = "alc", main = true,
+    { id = "alc", key = "ALC", folder = "ArbiterLootCouncil", name = "ALC", fullName = "Arbiter Loot Council", label = "LOOT COUNCIL", color = "45C97E", mark = "alc", main = true,
       slash = "/alc", settings = "settings", cf = 1719135,
       blurb = "Loot council: responses, voting and awards" },
-    { id = "skins", folder = "AllemanoSkins", name = "Skins", label = "SKINS", color = "E55D9E", mark = "skins", main = true, soon = true,
+    { id = "skins", key = "ALLEMANOSKINS", folder = "AllemanoSkins", name = "Skins", label = "SKINS", color = "E55D9E", mark = "skins", main = true, soon = true,
       slash = "/askins",
       blurb = "Gives other addons the Allemano look" },
-    { id = "hush-feed", folder = "Hush_Feed", name = "Hush Feed", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", module = "hush",
+    { id = "hush-feed", key = "HUSHFEED", folder = "Hush_Feed", name = "Hush Feed", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", module = "hush",
       slash = "/feed", settings = "options", cf = 1719071,
       blurb = "Trade, General and LFG chat sorted into feeds" },
-    { id = "hush-lfg", folder = "Hush_LFG", name = "Hush LFG", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", module = "hush",
+    { id = "hush-lfg", key = "HUSHLFG", folder = "Hush_LFG", name = "Hush LFG", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", module = "hush",
       slash = "/hlfg", settings = "options", cf = 1719074,
       blurb = "Groups and players from chat and the Group Finder" },
-    { id = "hush-recruit", folder = "Hush_Recruit", name = "Hush Recruit", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", module = "hush",
+    { id = "hush-recruit", key = "HUSHRECRUIT", folder = "Hush_Recruit", name = "Hush Recruit", label = "COMMUNICATION", color = "3FD0E0", mark = "hush", module = "hush",
       slash = "/hr", settings = "options", cf = 1719076,
       blurb = "Guild recruitment ads, apply link and candidates" },
 }
@@ -134,14 +134,19 @@ local function slashHandler(slash)
     end
 end
 
-function Registry:Run(slash, arg)
-    local fn = slash and slashHandler(slash)
-    if not fn then return false end
-    HUB:Call("run " .. slash, fn, arg or "")
+-- Runs an addon's own slash command: its SlashCmdList entry by name, else whichever entry owns the slash text.
+function Registry:Run(entry, arg)
+    local fn = entry.key and SlashCmdList[entry.key]
+    if type(fn) ~= "function" then fn = entry.slash and slashHandler(entry.slash) end
+    if type(fn) ~= "function" then
+        HUB:Print((entry.name or "That addon") .. " did not answer " .. tostring(entry.slash) .. ".")
+        return false
+    end
+    HUB:Call("run " .. tostring(entry.slash), fn, arg or "")
     return true
 end
 
-function Registry:Open(entry) return self:Run(entry.slash, "") end
-function Registry:OpenSettings(entry) return entry.settings and self:Run(entry.slash, entry.settings) end
+function Registry:Open(entry) return self:Run(entry, "") end
+function Registry:OpenSettings(entry) return entry.settings and self:Run(entry, entry.settings) end
 
 function Registry:CurseForgeURL(entry) return entry.cf and (self.URL.curseforge .. entry.cf) or nil end

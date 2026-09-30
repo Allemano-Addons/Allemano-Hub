@@ -3,11 +3,11 @@ local _, HUB = ...
 
 HUB.releases = {
     ["hush"] = { version = "0.1.32", date = "2026-09-30", note = "The launcher button's mark is a little larger, like AltBoard's and the other Allemano addons." },
-    ["altboard"] = { version = "0.8.2", date = "2026-09-30", note = "Preparing the public release: the development probe (/ab probe) is removed and its saved data is dropped at login, the..." },
-    ["craftboard"] = { version = "0.6.3", date = "2026-09-30", note = "The launcher button and the addon-list icon now look like the other Allemano addons: a 30 px dark square with the mark..." },
+    ["altboard"] = { version = "0.8.2", date = "2026-09-30", note = "Preparing the public release: the development probe (/ab probe) is removed and its saved data..." },
+    ["craftboard"] = { version = "0.6.3", date = "2026-09-30", note = "The launcher button and the addon-list icon now look like the other Allemano addons: a 30 px..." },
     ["art"] = { version = "0.16.1", date = "2026-09-30", note = "The launcher button's mark is larger, like AltBoard's and the other Allemano addons." },
-    ["alc"] = { version = "0.2.0-alpha2", date = "2026-09-30", note = "Loot council for WoW Forever. Part of Allemano Addons." },
-    ["session-tracker"] = { version = "0.4.0", date = "2026-09-29", note = "Allemano look, like AltBoard and Allemano Raid Tools: rounded panels, the neutral palette, the SessionTracker mark and..." },
+    ["alc"] = { version = "0.2.0-alpha2" },
+    ["session-tracker"] = { version = "0.4.0", date = "2026-09-29", note = "Allemano look, like AltBoard and Allemano Raid Tools: rounded panels, the neutral palette, the..." },
     ["hush-feed"] = { version = "0.1.1" },
     ["hush-lfg"] = { version = "0.1.0" },
     ["hush-recruit"] = { version = "0.1.8" },

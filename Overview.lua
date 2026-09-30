@@ -7,6 +7,7 @@ local Theme, W, Registry, Window = HUB.Theme, HUB.W, HUB.Registry, HUB.Window
 
 local CARD_H, CARD_GAP = 72, 10
 local NEWS_W, PAD = 300, 28
+local NEWS_AREA_H = 400 -- window height (680) minus the title bar, the news heading and the bottom margin
 local MONTHS = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
 
 local function shortDate(iso)
@@ -68,9 +69,9 @@ local function createCard(parent)
     card.mark = card:CreateTexture(nil, "ARTWORK")
     card.mark:SetSize(28, 23)
     card.mark:SetPoint("LEFT", 16, 0)
-    card.name = W.Text(card, 2, "text")
-    card.name:SetPoint("TOPLEFT", 58, -15)
-    card.name:SetPoint("RIGHT", card, "RIGHT", -92, 0)
+    card.name = W.Text(card, 1, "text")
+    card.name:SetPoint("TOPLEFT", 58, -16)
+    card.name:SetPoint("RIGHT", card, "RIGHT", -82, 0)
     card.label = W.Text(card, -3, "textDim")
     card.label:SetPoint("BOTTOMLEFT", 58, 15)
     card.open = W.Button(card, "Open", "plain", function() if card.entry then Registry:Open(card.entry) end end)
@@ -204,21 +205,24 @@ Window.pages.overview = {
                 if a.date ~= b.date then return a.date > b.date end
                 return a.entry.name < b.entry.name
             end)
-            local y = 0
-            for i = 1, min(#items, 6) do
+            -- as many as fit in the column
+            local y, shown = 0, 0
+            for i = 1, #items do
                 local c = self.news[i]
                 if not c then
                     c = createNewsCard(self.newsArea)
                     self.news[i] = c
                 end
                 c:SetWidth(NEWS_W)
+                updateNewsCard(c, items[i])
+                if y + c:GetHeight() > NEWS_AREA_H then break end
                 c:ClearAllPoints()
                 c:SetPoint("TOPLEFT", 0, -y)
-                updateNewsCard(c, items[i])
                 c:Show()
+                shown = shown + 1
                 y = y + c:GetHeight() + 8
             end
-            for i = min(#items, 6) + 1, #self.news do self.news[i]:Hide() end
+            for i = shown + 1, #self.news do self.news[i]:Hide() end
         end
         return page
     end,

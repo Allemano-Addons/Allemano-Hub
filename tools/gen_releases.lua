@@ -67,8 +67,9 @@ local function add(id, folder, tocName, news)
     local cl = readf(repo .. "/CHANGELOG.md")
     local date, note = topEntry(cl)
     date = date or gitDate(repo, "CHANGELOG.md") or gitDate(repo, tocName) or generated
-    if not note or note == "" then note = tocField(toc, "Notes") or "" end
-    line = line .. (", date = %s, note = %s"):format(quote(date), quote(shorten(note, 120)))
+    if note and note ~= "" then
+      line = line .. (", date = %s, note = %s"):format(quote(date), quote(shorten(note, 95)))
+    end
   end
   out[#out + 1] = line .. " },"
   print(id, version)
