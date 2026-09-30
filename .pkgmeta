@@ -5,6 +5,7 @@ ignore:
   - .gitattributes
   - .github
   - docs
+  - tools
   - Tests
 
 manual-changelog:

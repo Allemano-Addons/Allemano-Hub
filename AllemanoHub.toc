@@ -2,7 +2,7 @@
 ## Title: Allemano Hub
 ## Notes: One place for your Allemano addons: what is installed and which version, shortcuts to open them, and help when something is wrong. Optional.
 ## Author: Allemano
-## Version: 0.1.0
+## Version: 0.2.0
 ## Category: Miscellaneous
 ## SavedVariables: AllemanoHubDB
 ## OptionalDeps: Hush, Hush_Feed, Hush_LFG, Hush_Recruit, AltBoard, CraftBoard, AllemanoRaidTools, ArbiterLootCouncil, SessionTracker
@@ -10,6 +10,9 @@
 
 Core.lua
 Widgets.lua
+Version.lua
+Releases.lua
 Registry.lua
 Window.lua
+Overview.lua
 Launcher.lua

@@ -1,20 +1,39 @@
--- Window: the Hub. A list of every Allemano addon with its version and state, and shortcuts.
+-- Window: the Hub. A title bar, a sidebar (the Hub's pages and every Allemano addon) and the
+-- selected page. Pages live in their own files and register with Window.pages[key] = { Build = fn }.
 local _, HUB = ...
 
 local Theme, W, Registry = HUB.Theme, HUB.W, HUB.Registry
 local Window = {}
 HUB.Window = Window
 
-local WIDTH, HEIGHT = 660, 580
-local TITLE_H, FOOTER_H, ROW_H = 46, 56, 50
-local frame, rows = nil, {}
+local MEDIA = "Interface\\AddOns\\AllemanoHub\\Media\\"
+local WIDTH, HEIGHT = 1120, 680
+local TITLE_H, SIDE_W = 50, 214
+local NAV_H = 34
+
+Window.pages = {}   -- key -> { Build = function(parent) -> page }
+Window.MEDIA = MEDIA
+
+local frame, content
+local built = {}    -- key -> page (frames are built the first time a page is shown)
+local navRows = {}  -- the sidebar rows, in order
+local current
+
+local HUB_PAGES = {
+    { key = "overview", label = "Overview", icon = "overview" },
+    { key = "appearance", label = "Appearance", icon = "appearance" },
+    { key = "guild", label = "Guild", icon = "guild" },
+    { key = "errors", label = "Errors", icon = "errors", badge = true },
+}
+
+function Window.MarkPath(entry) return entry.mark and (MEDIA .. "marks\\" .. entry.mark) or nil end
 
 -- ---------------------------------------------------------------------------
 -- A small box with text to copy (links cannot be opened from the game).
 -- ---------------------------------------------------------------------------
 
 local copyBox
-local function showCopyBox(title, text)
+function Window.ShowCopyBox(title, text)
     if not copyBox then
         copyBox = CreateFrame("Frame", "AllemanoHubCopyBox", UIParent)
         tinsert(UISpecialFrames, "AllemanoHubCopyBox")
@@ -47,96 +66,173 @@ local function showCopyBox(title, text)
     copyBox.edit:SetFocus()
     copyBox.edit:HighlightText()
 end
-Window.ShowCopyBox = showCopyBox
 
 -- ---------------------------------------------------------------------------
--- Rows
+-- Sidebar
 -- ---------------------------------------------------------------------------
 
-local function createRow(parent)
-    local row = CreateFrame("Frame", nil, parent)
-    row:SetHeight(ROW_H)
+local function navRow(parent, def)
+    local row = CreateFrame("Button", nil, parent)
+    row:SetHeight(NAV_H)
+    row.def = def
     row.bg = W.Fill(row, "selected", 1)
-    row.bg:SetPoint("TOPLEFT", 0, -2)
-    row.bg:SetPoint("BOTTOMRIGHT", 0, 2)
+    row.bg:SetPoint("TOPLEFT", 8, -1)
+    row.bg:SetPoint("BOTTOMRIGHT", -8, 1)
     W.Round(row.bg, Theme.radius.control)
-    row.bar = W.Fill(row, "accent", 1, "ARTWORK")
-    row.bar:SetSize(4, 28)
-    row.bar:SetPoint("LEFT", 12, 0)
-    W.Round(row.bar, 2)
-    row.name = W.Text(row, 2, "text")
-    row.name:SetPoint("TOPLEFT", 28, -11)
-    row.blurb = W.Text(row, -1, "textDim")
-    row.blurb:SetPoint("BOTTOMLEFT", 28, 10)
-    row.blurb:SetPoint("RIGHT", row, "RIGHT", -250, 0)
-    row.status = W.Text(row, -1, "textDim")
-    row.status:SetPoint("TOPRIGHT", row, "TOPRIGHT", -186, -11)
-    row.status:SetJustifyH("RIGHT")
-    row.version = W.Text(row, 0, "textDim")
-    row.version:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -186, 10)
-    row.version:SetJustifyH("RIGHT")
-    row.open = W.Button(row, "Open", "accent", function() Registry:Open(row.entry) end)
-    row.open:SetPoint("RIGHT", -12, 0)
-    row.open:SetWidth(78)
-    row.settings = W.IconButton(row, "settings", "Settings", function() Registry:OpenSettings(row.entry) end)
-    row.settings:SetPoint("RIGHT", row.open, "LEFT", -6, 0)
-    row.get = W.Button(row, "Get it", "plain", function()
-        local url = Registry:CurseForgeURL(row.entry)
-        if url then showCopyBox(row.entry.name .. " on CurseForge", url) end
-    end)
-    row.get:SetPoint("RIGHT", -12, 0)
-    row.get:SetWidth(78)
+    row.bg:Hide()
+    if def.mark then
+        row.icon = row:CreateTexture(nil, "ARTWORK")
+        row.icon:SetSize(18, 15)
+        row.icon:SetPoint("LEFT", 22, 0)
+        row.icon:SetTexture(def.mark)
+    else
+        row.icon = W.Icon(row, def.icon, 16, "textDim")
+        row.icon:SetPoint("LEFT", 22, 0)
+    end
+    row.text = W.Text(row, 1, "textDim")
+    row.text:SetPoint("LEFT", 48, 0)
+    row.badge = W.Text(row, -1, "warn")
+    row.badge:SetPoint("RIGHT", -24, 0)
+    row.badge:SetJustifyH("RIGHT")
+    row.dot = row:CreateTexture(nil, "ARTWORK")
+    row.dot:SetSize(7, 7)
+    row.dot:SetPoint("RIGHT", -26, 0)
+    W.Round(row.dot, 3.5)
+    row.dot:SetColorTexture(Theme:Color("warn"))
+    row.dot:Hide()
+    row:SetScript("OnEnter", function(self) if self.def.key ~= current then self.bg:SetAlpha(0.5) self.bg:Show() end end)
+    row:SetScript("OnLeave", function(self) if self.def.key ~= current then self.bg:Hide() end end)
+    row:SetScript("OnClick", function(self) Window:Select(self.def.key) end)
+    row.text:SetText(def.label)
     return row
 end
 
-local function hexColor(hex)
-    return Theme.Hex(hex)
+local function sectionLabel(parent, text, y)
+    local fs = W.Text(parent, -2, "textFaint")
+    fs:SetPoint("TOPLEFT", 24, y)
+    fs:SetText(text)
+    return fs
 end
 
-local function updateRow(row, e)
-    row.entry = e
-    row.bar:SetColorTexture(hexColor(e.color))
-    row.name:SetText(e.name)
-    row.blurb:SetText(e.blurb or "")
-    row.version:SetText(e.version and ("v" .. e.version) or "")
-    if not e.installed then
-        row.status:SetText("Not installed")
-        row.status:SetTextColor(Theme:Color("textFaint"))
-        row.name:SetTextColor(Theme:Color("textDim"))
-    elseif e.loaded then
-        row.status:SetText("Loaded")
-        row.status:SetTextColor(Theme:Color("good"))
-        row.name:SetTextColor(Theme:Color("text"))
-    else
-        row.status:SetText("Installed, not loaded")
-        row.status:SetTextColor(Theme:Color("warn"))
-        row.name:SetTextColor(Theme:Color("text"))
+local function buildSidebar(parent)
+    local s = CreateFrame("Frame", nil, parent)
+    s:SetWidth(SIDE_W)
+    s:SetPoint("TOPLEFT", 1, -TITLE_H)
+    s:SetPoint("BOTTOMLEFT", 1, 1)
+    local sbg = W.Fill(s, "sidebar", 1)
+    sbg:SetAllPoints()
+    W.Round(sbg, Theme.radius.panel)
+    local cap = W.Fill(s, "sidebar", 1)
+    cap:SetPoint("TOPLEFT")
+    cap:SetPoint("TOPRIGHT")
+    cap:SetHeight(24)
+    W.Line(s, "right", "line")
+
+    sectionLabel(s, "HUB", -20)
+    local y = -40
+    for _, def in ipairs(HUB_PAGES) do
+        local row = navRow(s, def)
+        row:SetPoint("TOPLEFT", 0, y)
+        row:SetPoint("TOPRIGHT", 0, y)
+        navRows[#navRows + 1] = row
+        y = y - NAV_H - 2
     end
-    local canOpen = e.loaded and e.slash
-    row.open:SetShown(canOpen and true or false)
-    row.settings:SetShown(canOpen and e.settings and true or false)
-    row.get:SetShown(not e.installed and e.cf and true or false)
-    row.bg:SetAlpha(e.installed and 1 or 0.55)
+
+    local sep = W.Line(s, "top", "line")
+    sep:ClearAllPoints()
+    sep:SetPoint("TOPLEFT", 16, y - 8)
+    sep:SetPoint("TOPRIGHT", -16, y - 8)
+    sep:SetHeight(Theme:Pixel(s))
+    sectionLabel(s, "ADDONS", y - 26)
+    y = y - 46
+    s.addonsTop = y
+    frame.sidebar = s
+end
+
+-- The addon rows follow what the Registry lists (built the first time the window opens).
+local function buildAddonRows()
+    local s = frame.sidebar
+    local y = s.addonsTop
+    for _, e in ipairs(Registry:Main()) do
+        local row = navRow(s, { key = "addon:" .. e.id, label = e.name, mark = Window.MarkPath(e), entry = e })
+        row:SetPoint("TOPLEFT", 0, y)
+        row:SetPoint("TOPRIGHT", 0, y)
+        navRows[#navRows + 1] = row
+        y = y - NAV_H - 2
+    end
+end
+
+function Window:RefreshNav()
+    local errors = Registry:ErrorCount()
+    local byId = {}
+    for _, e in ipairs(Registry:List()) do byId[e.id] = e end
+    for _, row in ipairs(navRows) do
+        local def = row.def
+        local selected = def.key == current
+        row.bg:SetAlpha(1)
+        row.bg:SetShown(selected)
+        row.text:SetTextColor(Theme:Color(selected and "text" or "textDim"))
+        if def.badge then
+            row.badge:SetText(errors > 0 and tostring(errors) or "")
+        end
+        if def.entry then
+            local e = byId[def.entry.id] or def.entry
+            row.dot:SetShown(e.update and true or false)
+            row.icon:SetAlpha(e.installed and 1 or 0.4)
+            row.text:SetTextColor(Theme:Color(not e.installed and "textFaint" or selected and "text" or "textDim"))
+        elseif def.icon then
+            row.icon:SetVertexColor(Theme:Color(selected and "text" or "textDim"))
+        end
+    end
+end
+
+-- ---------------------------------------------------------------------------
+-- Pages
+-- ---------------------------------------------------------------------------
+
+-- A page for what is not built yet.
+local function placeholder(label)
+    return {
+        Build = function(parent)
+            local page = { frame = CreateFrame("Frame", nil, parent) }
+            page.frame:SetAllPoints()
+            local title = W.Text(page.frame, 8, "text")
+            title:SetPoint("TOPLEFT", 28, -28)
+            title:SetText(label)
+            local text = W.Text(page.frame, 1, "textFaint")
+            text:SetPoint("TOPLEFT", 28, -74)
+            text:SetText("Coming in a later version.")
+            function page:Refresh() end
+            return page
+        end,
+    }
+end
+
+function Window:Select(key)
+    if not frame then return end
+    current = key
+    for k, page in pairs(built) do page.frame:SetShown(k == key) end
+    local page = built[key]
+    if not page then
+        local def = Window.pages[key]
+        if not def then
+            local label = key
+            for _, row in ipairs(navRows) do if row.def.key == key then label = row.def.label end end
+            def = placeholder(label)
+        end
+        page = def.Build(content)
+        built[key] = page
+    end
+    page.frame:Show()
+    if page.Refresh then page:Refresh() end
+    self:RefreshNav()
 end
 
 function Window:Refresh()
     if not frame or not frame:IsShown() then return end
-    local list = Registry:List()
-    local installed = 0
-    for i, e in ipairs(list) do
-        local row = rows[i]
-        if not row then
-            row = createRow(frame.body)
-            row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)
-            row:SetPoint("TOPRIGHT", 0, -(i - 1) * ROW_H)
-            rows[i] = row
-        end
-        updateRow(row, e)
-        row:Show()
-        if e.installed then installed = installed + 1 end
-    end
-    for i = #list + 1, #rows do rows[i]:Hide() end
-    frame.count:SetText(("%d of %d installed"):format(installed, #list))
+    local page = current and built[current]
+    if page and page.Refresh then page:Refresh() end
+    self:RefreshNav()
 end
 
 -- ---------------------------------------------------------------------------
@@ -186,40 +282,33 @@ local function build()
     end)
 
     local logo = title:CreateTexture(nil, "ARTWORK")
-    logo:SetSize(24, 24)
-    logo:SetPoint("LEFT", 16, 0)
+    logo:SetSize(26, 22)
+    logo:SetPoint("LEFT", 18, 0)
     if logo:SetTexture(W.MARK) == false then logo:SetColorTexture(Theme:Color("accent")) end
-    local name = W.Text(title, 4, "text")
-    name:SetPoint("LEFT", logo, "RIGHT", 10, 0)
-    name:SetText("Allemano Hub")
+    local name = W.Text(title, 3, "text")
+    name:SetPoint("LEFT", logo, "RIGHT", 12, 0)
+    name:SetText("ALLEMANO")
+    local sub = W.Text(title, -3, "textDim")
+    sub:SetPoint("LEFT", name, "RIGHT", 10, -2)
+    sub:SetText("HUB")
 
     local close = W.CloseButton(title, function() frame:Hide() end)
-    close:SetPoint("RIGHT", -12, 0)
-    local refresh = W.IconButton(title, "sync", "Refresh", function() Window:Refresh() end)
-    refresh:SetPoint("RIGHT", close, "LEFT", -4, 0)
-    frame.count = W.Text(title, 0, "textDim")
-    frame.count:SetPoint("RIGHT", refresh, "LEFT", -12, 0)
+    close:SetPoint("RIGHT", -14, 0)
+    local version = W.Text(title, 0, "textFaint")
+    version:SetPoint("RIGHT", close, "LEFT", -18, 0)
+    version:SetText("v" .. tostring(HUB.version))
 
-    frame.body = CreateFrame("Frame", nil, frame)
-    frame.body:SetPoint("TOPLEFT", 14, -(TITLE_H + 12))
-    frame.body:SetPoint("TOPRIGHT", -14, -(TITLE_H + 12))
-    frame.body:SetHeight(#Registry.known * ROW_H + 40)
+    buildSidebar(frame)
+    buildAddonRows()
 
-    local footer = CreateFrame("Frame", nil, frame)
-    footer:SetPoint("BOTTOMLEFT")
-    footer:SetPoint("BOTTOMRIGHT")
-    footer:SetHeight(FOOTER_H)
-    W.Line(footer, "top", "line")
-    local note = W.Text(footer, -1, "textFaint")
-    note:SetPoint("LEFT", 16, 0)
-    note:SetText("Allemano Hub is optional. Every addon works without it.")
-    local discord = W.Button(footer, "Discord", "plain", function() showCopyBox("Allemano Discord", Registry.URL.discord) end)
-    discord:SetPoint("RIGHT", -14, 0)
-    local site = W.Button(footer, "Website", "plain", function() showCopyBox("Allemano Addons", Registry.URL.site) end)
-    site:SetPoint("RIGHT", discord, "LEFT", -8, 0)
-    frame.footer = footer
+    content = CreateFrame("Frame", nil, frame)
+    content:SetPoint("TOPLEFT", frame.sidebar, "TOPRIGHT", 0, 0)
+    content:SetPoint("BOTTOMRIGHT", -1, 1)
+    frame.content = content
 
-    frame:SetScript("OnShow", function() Window:Refresh() end)
+    frame:SetScript("OnShow", function()
+        if not current then Window:Select("overview") else Window:Refresh() end
+    end)
     restorePosition()
     frame:Hide()
 end

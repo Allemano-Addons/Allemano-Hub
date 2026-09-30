@@ -4,11 +4,11 @@ local addonName, HUB = ...
 
 HUB.name = addonName
 HUB.SCHEMA = 1
-HUB.COLOR = "B57EDC" -- Hub violet
+HUB.COLOR = "ECEDEF" -- the plain Allemano white (the brand mark)
 
 function HUB:Print(...)
     local msg = strjoin(" ", tostringall(...))
-    DEFAULT_CHAT_FRAME:AddMessage("|cffb57edcAllemano Hub|r " .. msg)
+    DEFAULT_CHAT_FRAME:AddMessage("|cffecedefAllemano Hub|r " .. msg)
 end
 
 -- ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ end)
 -- ---------------------------------------------------------------------------
 
 HUB.DEFAULTS = {
-    font = "Friz Quadrata", textSize = "M", accentMode = "own", accent = "B57EDC",
+    font = "Friz Quadrata", textSize = "M", accentMode = "own", accent = "ECEDEF",
     scale = 1, bgAlpha = 0.97, launcher = true, launcherLocked = false,
 }
 

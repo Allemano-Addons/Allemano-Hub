@@ -1,4 +1,4 @@
--- Widgets: Theme (the Allemano palette, Hub violet) and the flat building blocks
+-- Widgets: Theme (the Allemano palette, Allemano white) and the flat building blocks
 -- used by the window: fills, lines, borders with rounded corners (same technique as
 -- AltBoard and Hush's Allemano theme), text, icons, buttons, edit box, toggle, scrolling list.
 -- No Blizzard textures (they are refused or restyled on WoW Forever).
@@ -27,7 +27,7 @@ Theme.colors = {
 Theme.radius = { control = 6, panel = 10, small = 4 }
 
 Theme.TEXT_SIZES = { S = 11, M = 12, L = 13 }
--- Presets for the "custom" accent (the first is the Hub violet).
+-- Presets for the "custom" accent (the first is the Allemano white).
 Theme.ACCENTS = { "F0763A", "E8A33D", "3FC77F", "3FD0E0", "5B8CFF", "B57EDC", "E0564F", "E6E8EB" }
 Theme.OWN_ACCENT = HUB.COLOR
 
@@ -60,7 +60,7 @@ local function hushAccent()
 end
 function Theme.HasHush() return type(HushDB) == "table" end
 
--- accentMode: "own" (Hub violet), "hush" (follow Hush, else own), "class" or "custom".
+-- accentMode: "own" (Allemano white), "hush" (follow Hush, else own), "class" or "custom".
 function Theme:Accent()
     local s = settings()
     if s.accentMode == "class" then
