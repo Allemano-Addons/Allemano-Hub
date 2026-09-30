@@ -1,0 +1,12 @@
+package-as: AllemanoHub
+
+ignore:
+  - .luacheckrc
+  - .gitattributes
+  - .github
+  - docs
+  - Tests
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
