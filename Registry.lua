@@ -124,6 +124,35 @@ function Registry:ErrorCount()
     return n
 end
 
+-- Every recorded error of every addon (each keeps its last ten in its SavedVariables), newest first:
+-- { addon = <registry entry>, t, where, msg, v }.
+local HUB_ENTRY = { id = "hub", name = "Allemano Hub", color = "ECEDEF" }
+
+function Registry:Errors()
+    local out = {}
+    local function add(addon, list)
+        for _, e in ipairs(list) do
+            out[#out + 1] = { addon = addon, t = tonumber(e.t) or 0, where = tostring(e.where or "?"), msg = tostring(e.msg or ""), v = e.v }
+        end
+    end
+    for _, k in ipairs(self.known) do
+        local db = k.sv and _G[k.sv]
+        if type(db) == "table" and type(db.errors) == "table" then add(k, db.errors) end
+    end
+    if HUB.errors then add(HUB_ENTRY, HUB.errors) end
+    table.sort(out, function(a, b) return a.t > b.t end)
+    return out
+end
+
+-- Empties every addon's error list (they hold the same table, so wiping it clears them all).
+function Registry:ClearErrors()
+    for _, k in ipairs(self.known) do
+        local db = k.sv and _G[k.sv]
+        if type(db) == "table" and type(db.errors) == "table" then wipe(db.errors) end
+    end
+    if HUB.errors then wipe(HUB.errors) end
+end
+
 -- Runs a slash command by looking up which SlashCmdList entry owns it (no need to know its name).
 local function slashHandler(slash)
     for k, v in pairs(_G) do
