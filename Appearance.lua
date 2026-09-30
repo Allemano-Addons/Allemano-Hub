@@ -110,7 +110,14 @@ Window.pages.appearance = {
         alpha.refresh = function() alpha:Set(floor((s.bgAlpha or 0.97) * 100 + 0.5)) end
         page.controls[#page.controls + 1] = alpha
 
-        local scale = W.Slider(f, 70, 130, 5, 190, function(v) return v .. "%" end, function(v) set("scale", v / 100) end)
+        -- The slider sits inside the window it scales, so resizing while the thumb is held would move it
+        -- out from under the mouse. The number follows the thumb; the window changes when it is let go.
+        local pendingScale
+        local scale = W.Slider(f, 70, 130, 5, 190, function(v) return v .. "%" end, function(v) pendingScale = v / 100 end)
+        scale:HookScript("OnMouseUp", function()
+            if pendingScale and pendingScale ~= s.scale then set("scale", pendingScale) end
+            pendingScale = nil
+        end)
         row("Window scale", scale, 9)
         scale.refresh = function() scale:Set(floor((s.scale or 1) * 100 + 0.5)) end
         page.controls[#page.controls + 1] = scale

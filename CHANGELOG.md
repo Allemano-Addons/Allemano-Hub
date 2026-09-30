@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.1 – 2026-09-30
+- Fix: the window jumped while the scale slider was dragged (it grew under the mouse). The number follows the
+  slider and the window changes when the mouse button is released.
+
+
 ## 0.4.0 – 2026-09-30
 - Appearance page: font (automatic = EllesmereUI's Expressway when it is installed, else the game font, or any font
   the client accepts), text size, accent color (Allemano white, class or a preset), window background and scale, and
