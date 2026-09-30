@@ -72,7 +72,7 @@ end)
 -- ---------------------------------------------------------------------------
 
 HUB.DEFAULTS = {
-    font = "Friz Quadrata", textSize = "M", accentMode = "own", accent = "ECEDEF",
+    font = "Auto", textSize = "M", accentMode = "own", accent = "ECEDEF",
     scale = 1, bgAlpha = 0.97, launcher = true, launcherLocked = false,
 }
 

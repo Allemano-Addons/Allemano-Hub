@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 – 2026-09-30
+- Appearance page: font (automatic = EllesmereUI's Expressway when it is installed, else the game font, or any font
+  the client accepts), text size, accent color (Allemano white, class or a preset), window background and scale, and
+  the launcher button, with a live preview.
+- WoW Forever refuses font files shipped in nearly all addon folders (only the game's fonts and a few addons'
+  work), so the Hub cannot bring Manrope or JetBrains Mono. `/allemano fonttest` lists the fonts the client accepts.
+
+
 ## 0.3.1 – 2026-09-30
 - Fix: an error in the list could not be selected (the page rebuilt the list on every refresh and forgot the
   selection); clicking a row now shows that error on the right and keeps it selected.

@@ -26,6 +26,9 @@ Theme.colors = {
 }
 Theme.radius = { control = 6, panel = 10, small = 4 }
 
+-- "Automatic" font: Expressway (registered with LibSharedMedia by EllesmereUI) when it is there.
+-- WoW Forever refuses font files shipped in most addon folders, so the Hub cannot bring its own.
+Theme.AUTO_FONT = "Expressway"
 Theme.TEXT_SIZES = { S = 11, M = 12, L = 13 }
 -- Presets for the "custom" accent (the first is the Allemano white).
 Theme.ACCENTS = { "F0763A", "E8A33D", "3FC77F", "3FD0E0", "5B8CFF", "B57EDC", "E0564F", "E6E8EB" }
@@ -141,7 +144,9 @@ end
 
 -- The chosen font's path, or the game font if it is missing/refused.
 function Theme:FontPath()
-    local p = fontPath(settings().font)
+    local name = settings().font
+    if name == "Auto" then name = Theme.AUTO_FONT end
+    local p = fontPath(name)
     return p and valid(p) and p or FALLBACK
 end
 
