@@ -52,7 +52,7 @@ local function refreshBanner(b)
     b.title:SetText(("%d update%s available"):format(#updates, #updates > 1 and "s" or ""))
     local parts = {}
     for i, e in ipairs(updates) do
-        if i <= 3 then parts[#parts + 1] = ("%s %s -> %s"):format(e.name, e.version, e.latest) end
+        if i <= 3 then parts[#parts + 1] = ("%s %s -> %s%s"):format(e.name, e.version, e.latest, e.latestFromGuild and " (seen in the guild)" or "") end
     end
     if #updates > 3 then parts[#parts + 1] = ("+%d more"):format(#updates - 3) end
     b.detail:SetText(table.concat(parts, ",  ") .. "  \194\183  update in the CurseForge app")

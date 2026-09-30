@@ -70,6 +70,10 @@ local function inspect(entry)
     entry.version = entry.installed and safe(getMeta, entry.folder, "Version") or nil
     local release = HUB.releases and HUB.releases[entry.id]
     entry.latest = release and release.version
+    local seen = HUB.Guild and HUB.Guild:Newest(entry.id)
+    if seen and (not entry.latest or HUB.Version.Compare(entry.latest, seen) < 0) then
+        entry.latest, entry.latestFromGuild = seen, true
+    end
     entry.update = entry.installed and entry.version and entry.latest
         and HUB.Version.Compare(entry.version, entry.latest) < 0 or false
     return entry

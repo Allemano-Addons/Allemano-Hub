@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 – 2026-09-30
+- Guild page: a table of the guild members who run Allemano Hub, with the version of each Allemano addon they have
+  (green = the newest known, orange = an update exists, a dash = not installed), online members first, class colors,
+  and offline members keep their last list. Only addon names and versions are shared, only with your own guild, and
+  "Share my addon list" turns it off. "Ask the guild" (`/allemano sync`) asks for the lists.
+- A newer version seen on a guild member counts as an update on the Overview banner ("seen in the guild").
+- `/allemano selftest` adds a fake member built from your own list; `/allemano selftest clear` removes it.
+
+
 ## 0.4.1 – 2026-09-30
 - Fix: the window jumped while the scale slider was dragged (it grew under the mouse). The number follows the
   slider and the window changes when the mouse button is released.

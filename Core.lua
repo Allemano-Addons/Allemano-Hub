@@ -30,6 +30,13 @@ function HUB:RecordError(where, err)
     geterrorhandler()(err)
 end
 
+-- Full character name: on WoW Forever UnitName returns the first name and the surname separately.
+function HUB:PlayerFullName()
+    local first, second = UnitName("player")
+    if second and second ~= "" then return first .. (CHARACTER_SURNAME_SEPARATOR or " ") .. second end
+    return first or "Unknown"
+end
+
 -- Run fn protected; errors are recorded instead of lost.
 function HUB:Call(where, fn, ...)
     local ok, err = pcall(fn, ...)
@@ -73,7 +80,7 @@ end)
 
 HUB.DEFAULTS = {
     font = "Auto", textSize = "M", accentMode = "own", accent = "ECEDEF",
-    scale = 1, bgAlpha = 0.97, launcher = true, launcherLocked = false,
+    scale = 1, bgAlpha = 0.97, launcher = true, launcherLocked = false, shareAddons = true,
 }
 
 -- Settings changes apply at once: listeners get (key, value).
@@ -94,6 +101,7 @@ local function initDB()
     for k, v in pairs(HUB.DEFAULTS) do
         if db.settings[k] == nil then db.settings[k] = v end
     end
+    db.guild = db.guild or {}
     -- Errors from before the saved data was loaded are kept too.
     db.errors = db.errors or {}
     for _, e in ipairs(HUB.errors) do tinsert(db.errors, e) end
