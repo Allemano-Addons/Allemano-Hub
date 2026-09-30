@@ -2,6 +2,7 @@
 ## Title: Allemano Hub
 ## Notes: One place for your Allemano addons: what is installed and which version, shortcuts to open them, and help when something is wrong. Optional.
 ## Author: Allemano
+## X-Curse-Project-ID: 1719519
 ## Version: 0.5.0
 ## Category: Miscellaneous
 ## SavedVariables: AllemanoHubDB
