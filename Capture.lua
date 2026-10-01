@@ -66,12 +66,13 @@ local function store(entry, where, msg, now)
     end
 end
 
-local function catch(text)
+local function catch(text, stack)
     if busy then return end
     busy = true
     local ok = pcall(function()
         text = tostring(text or "")
         local entry, where = locate(text)
+        if not entry and stack then entry, where = locate(tostring(stack)) end
         if not entry then return end
         if HUB.db then
             store(entry, where, text, time())
@@ -108,14 +109,19 @@ local function wrap()
     seterrorhandler(handler)
 end
 
+-- BugGrabber takes over seterrorhandler (it becomes a no-op), so wrapping does not work next to it.
+-- It announces every error on EventRegistry with the error's id; GetErrorByID turns that into the error.
 local bugGrabber = _G.BugGrabber
-if type(bugGrabber) == "table" and type(bugGrabber.RegisterCallback) == "function" then
-    Capture.mode = "BugGrabber"
-    local target = {}
-    local ok = pcall(bugGrabber.RegisterCallback, target, "BugGrabber_BugGrabbed", function(_, errorObject)
-        if type(errorObject) == "table" then catch((errorObject.message or "") .. "\n" .. (errorObject.stack or "")) end
-    end)
-    if not ok then Capture.mode = nil end
+if type(bugGrabber) == "table" and type(bugGrabber.GetErrorByID) == "function"
+    and EventRegistry and type(EventRegistry.RegisterCallback) == "function" then
+    local owner = {}
+    local ok = pcall(EventRegistry.RegisterCallback, EventRegistry, "BugGrabber.BugGrabbed", function(_, tableID)
+        local okGet, errorObject = pcall(bugGrabber.GetErrorByID, bugGrabber, tableID)
+        if okGet and type(errorObject) == "table" then
+            catch(errorObject.message, errorObject.stack)
+        end
+    end, owner)
+    if ok then Capture.mode = "BugGrabber" end
 end
 
 if not Capture.mode then
