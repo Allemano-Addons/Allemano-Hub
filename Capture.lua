@@ -81,6 +81,10 @@ local function catch(text, stack)
         end
     end)
     busy = false
+    -- Any error may have changed the list (also the addons' own records), so an open window follows along.
+    if C_Timer and C_Timer.After and HUB.Window then
+        C_Timer.After(0, function() pcall(HUB.Window.Refresh, HUB.Window) end)
+    end
     return ok
 end
 Capture.Catch = catch

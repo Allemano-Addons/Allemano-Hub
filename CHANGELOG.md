@@ -5,6 +5,7 @@
   their own (Arbiter Loot Council, Hush Feed, Hush LFG, Hush Recruit) and errors outside an addon's protected
   calls (button scripts, timers). Uses BugGrabber when it is installed, otherwise the game's error handler.
   Errors an addon already recorded itself are not shown twice.
+- The open Errors page and the error count update at once when a new error arrives.
 - `/allemano errors test <AddonFolder>` sends a test error as if it came from that addon, for checking.
 
 ## 0.5.0 – 2026-09-30
