@@ -3,10 +3,10 @@
 ## Notes: One place for your Allemano addons: what is installed and which version, shortcuts to open them, and help when something is wrong. Optional.
 ## Author: Allemano
 ## X-Curse-Project-ID: 1719519
-## Version: 0.5.0
+## Version: 0.6.0
 ## Category: Miscellaneous
 ## SavedVariables: AllemanoHubDB
-## OptionalDeps: EllesmereUI, Hush, Hush_Feed, Hush_LFG, Hush_Recruit, AltBoard, CraftBoard, AllemanoRaidTools, ArbiterLootCouncil, SessionTracker
+## OptionalDeps: !BugGrabber, EllesmereUI, Hush, Hush_Feed, Hush_LFG, Hush_Recruit, AltBoard, CraftBoard, AllemanoRaidTools, ArbiterLootCouncil, SessionTracker
 ## IconTexture: Interface\AddOns\AllemanoHub\Media\wow\icon
 
 Core.lua
@@ -14,6 +14,7 @@ Widgets.lua
 Version.lua
 Releases.lua
 Registry.lua
+Capture.lua
 Guild.lua
 Window.lua
 Overview.lua

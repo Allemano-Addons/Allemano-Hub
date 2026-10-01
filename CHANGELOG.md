@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0
+- The Errors page now catches Lua errors from every Allemano addon, also those that keep no error list of
+  their own (Arbiter Loot Council, Hush Feed, Hush LFG, Hush Recruit) and errors outside an addon's protected
+  calls (button scripts, timers). Uses BugGrabber when it is installed, otherwise the game's error handler.
+  Errors an addon already recorded itself are not shown twice.
+- `/allemano errors test <AddonFolder>` sends a test error as if it came from that addon, for checking.
+
 ## 0.5.0 – 2026-09-30
 - Guild page: a table of the guild members who run Allemano Hub, with the version of each Allemano addon they have
   (green = the newest known, orange = an update exists, a dash = not installed), online members first, class colors,

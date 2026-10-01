@@ -125,6 +125,7 @@ function Registry:ErrorCount()
         if type(db) == "table" and type(db.errors) == "table" then n = n + #db.errors end
     end
     if HUB.errors then n = n + #HUB.errors end
+    for _, list in pairs(HUB.db and HUB.db.captured or {}) do n = n + #list end
     return n
 end
 
@@ -142,6 +143,8 @@ function Registry:Errors()
     for _, k in ipairs(self.known) do
         local db = k.sv and _G[k.sv]
         if type(db) == "table" and type(db.errors) == "table" then add(k, db.errors) end
+        local caught = HUB.db and HUB.db.captured and HUB.db.captured[k.folder]
+        if caught then add(k, caught) end
     end
     if HUB.errors then add(HUB_ENTRY, HUB.errors) end
     table.sort(out, function(a, b) return a.t > b.t end)
@@ -155,6 +158,7 @@ function Registry:ClearErrors()
         if type(db) == "table" and type(db.errors) == "table" then wipe(db.errors) end
     end
     if HUB.errors then wipe(HUB.errors) end
+    if HUB.db and HUB.db.captured then wipe(HUB.db.captured) end
 end
 
 -- Runs a slash command by looking up which SlashCmdList entry owns it (no need to know its name).

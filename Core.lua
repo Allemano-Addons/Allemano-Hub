@@ -142,6 +142,12 @@ HUB:AddSlashCommand("errors", function(arg)
         HUB:Print("Error list cleared.")
         return
     end
+    local testFolder = strmatch(arg or "", "^[Tt][Ee][Ss][Tt]%s+(%S+)")
+    if testFolder then
+        -- Sends a made-up error through the game's error handler, worded as if it came from that addon.
+        geterrorhandler()("Interface\\AddOns\\" .. testFolder .. "\\Test.lua:1: test error from /allemano errors test")
+        return
+    end
     if #HUB.errors == 0 then HUB:Print("No errors recorded.") return end
     for _, e in ipairs(HUB.errors) do
         HUB:Print(("[%s] %s (v%s): %s"):format(date("%d/%m %H:%M", e.t), e.where, tostring(e.v), e.msg))
