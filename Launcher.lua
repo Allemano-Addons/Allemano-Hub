@@ -4,7 +4,7 @@ local _, HUB = ...
 
 local Theme, W = HUB.Theme, HUB.W
 local SIZE = 30
-local button
+local button, badge
 
 local function savePosition()
     local d = HUB.db.settings
@@ -37,9 +37,26 @@ local function build()
     logo:SetPoint("BOTTOMRIGHT", -2, 2)
     if logo:SetTexture(W.MARK) == false then logo:SetColorTexture(Theme:Color("accent")) end
 
+    -- A small number for errors that came in since the Errors page was last opened.
+    local badgeFrame = CreateFrame("Frame", nil, button)
+    badgeFrame:SetSize(16, 14)
+    badgeFrame:SetPoint("CENTER", button, "TOPRIGHT", -1, -1)
+    badgeFrame:SetFrameLevel(button:GetFrameLevel() + 3)
+    local badgeFill = W.Fill(badgeFrame, "warn", 1)
+    badgeFill:SetAllPoints()
+    W.Round(badgeFill, 6)
+    badge = W.Text(badgeFrame, -3, "text", "OVERLAY")
+    badge:SetPoint("CENTER", 0, 0)
+    badge:SetJustifyH("CENTER")
+    badge:SetTextColor(0.05, 0.05, 0.07)
+    badgeFrame:Hide()
+    button.badgeFrame = badgeFrame
+
     button:SetScript("OnEnter", function(self)
         border:SetColor(Theme:Color("accent"))
-        W.ShowTooltip(self, "Allemano Hub - your Allemano addons")
+        local unseen = HUB.Registry:UnseenErrors()
+        local extra = unseen > 0 and ("\n|cffe8a33d" .. unseen .. " new error" .. (unseen > 1 and "s" or "") .. "|r") or ""
+        W.ShowTooltip(self, "Allemano Hub - your Allemano addons" .. extra)
     end)
     button:SetScript("OnLeave", function()
         border:SetColor(Theme:Color("line"))
@@ -55,6 +72,14 @@ local function build()
     end)
     restorePosition()
     button:SetShown(HUB.db.settings.launcher ~= false)
+    HUB.UpdateLauncher()
+end
+
+function HUB.UpdateLauncher()
+    if not button then return end
+    local n = HUB.Registry:UnseenErrors()
+    badge:SetText(n > 99 and "99" or tostring(n))
+    button.badgeFrame:SetShown(n > 0)
 end
 
 function HUB.ResetLauncherPosition()

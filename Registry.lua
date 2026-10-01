@@ -151,6 +151,20 @@ function Registry:Errors()
     return out
 end
 
+-- Errors that came in since the Errors page was last looked at (the number on the launcher button).
+function Registry:UnseenErrors()
+    local seen = HUB.db and tonumber(HUB.db.errorsSeen) or 0
+    local n = 0
+    for _, e in ipairs(self:Errors()) do
+        if e.t > seen then n = n + 1 end
+    end
+    return n
+end
+
+function Registry:MarkErrorsSeen()
+    if HUB.db then HUB.db.errorsSeen = time() end
+end
+
 -- Empties every addon's error list (they hold the same table, so wiping it clears them all).
 function Registry:ClearErrors()
     for _, k in ipairs(self.known) do

@@ -83,7 +83,10 @@ local function catch(text, stack)
     busy = false
     -- Any error may have changed the list (also the addons' own records), so an open window follows along.
     if C_Timer and C_Timer.After and HUB.Window then
-        C_Timer.After(0, function() pcall(HUB.Window.Refresh, HUB.Window) end)
+        C_Timer.After(0, function()
+            pcall(HUB.Window.Refresh, HUB.Window)
+            if HUB.UpdateLauncher then pcall(HUB.UpdateLauncher) end
+        end)
     end
     return ok
 end

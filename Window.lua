@@ -224,8 +224,10 @@ function Window:Select(key)
         built[key] = page
     end
     page.frame:Show()
+    if key == "errors" and frame:IsShown() then Registry:MarkErrorsSeen() end
     if page.Refresh then page:Refresh() end
     self:RefreshNav()
+    if HUB.UpdateLauncher then HUB.UpdateLauncher() end
 end
 
 -- The built page for a key (used by tests).
@@ -234,8 +236,10 @@ function Window.Page(key) return built[key] end
 function Window:Refresh()
     if not frame or not frame:IsShown() then return end
     local page = current and built[current]
+    if current == "errors" then Registry:MarkErrorsSeen() end
     if page and page.Refresh then page:Refresh() end
     self:RefreshNav()
+    if HUB.UpdateLauncher then HUB.UpdateLauncher() end
 end
 
 -- ---------------------------------------------------------------------------
