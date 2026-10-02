@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.1 – 2026-10-02
+- Fixed an error when opening the Hub if an Allemano addon without a picture (such as Allemano Arcade) was installed: it now gets a plain icon in the sidebar.
+- Session Tracker is now Allemano Ledger: the Hub knows the new folder and saved-data name, and opens it with /ledger.
+
 ## 0.7.0 – 2026-10-02
 - New Performance page: how much memory every loaded addon uses, with bars (the Allemano addons in their own
   colours), a filter for the Allemano addons or all, and sorting on any column. "Clean up memory" asks the game to
