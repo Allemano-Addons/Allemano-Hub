@@ -87,7 +87,7 @@ local function navRow(parent, def)
         row.icon:SetPoint("LEFT", 22, 0)
         row.icon:SetTexture(def.mark)
     else
-        row.icon = W.Icon(row, def.icon, 16, "textDim")
+        row.icon = W.Icon(row, def.icon or "overview", 16, "textDim") -- addons without a mark (X-Allemano-Id only) get a plain icon
         row.icon:SetPoint("LEFT", 22, 0)
     end
     row.text = W.Text(row, 1, "textDim")

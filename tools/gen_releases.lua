@@ -12,7 +12,7 @@ local addons = {
   { "craftboard", "CraftBoard", "CraftBoard.toc" },
   { "art", "AllemanoRaidTools", "AllemanoRaidTools.toc" },
   { "alc", "ArbiterLootCouncil", "ArbiterLootCouncil.toc" },
-  { "session-tracker", "SessionTracker", "SessionTracker.toc" },
+  { "session-tracker", "AllemanoLedger", "AllemanoLedger.toc" },
 }
 -- Hush modules: their versions matter for "update available", not for the news.
 local modules = {

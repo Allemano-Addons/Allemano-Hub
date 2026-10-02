@@ -6,7 +6,7 @@
 ## Version: 0.7.0
 ## Category: Miscellaneous
 ## SavedVariables: AllemanoHubDB
-## OptionalDeps: !BugGrabber, EllesmereUI, Hush, Hush_Feed, Hush_LFG, Hush_Recruit, AltBoard, CraftBoard, AllemanoRaidTools, ArbiterLootCouncil, SessionTracker
+## OptionalDeps: !BugGrabber, EllesmereUI, Hush, Hush_Feed, Hush_LFG, Hush_Recruit, AltBoard, CraftBoard, AllemanoRaidTools, ArbiterLootCouncil, AllemanoLedger, SessionTracker
 ## IconTexture: Interface\AddOns\AllemanoHub\Media\wow\icon
 
 Core.lua
