@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.7.0 – 2026-10-02
+- New Performance page: how much memory every loaded addon uses, with bars (the Allemano addons in their own
+  colours), a filter for the Allemano addons or all, and sorting on any column. "Clean up memory" asks the game to
+  free what addons no longer use (the page shows the memory before and after; hover the button to see exactly what it
+  does).
+- CPU per addon, when you turn on script profiling (it needs a reload and costs a little performance, so it is off
+  until you ask): milliseconds per second of play, and a Peak column with the highest figure since you opened the
+  page. The Hub measures itself while the page is open, so its own row is marked and left out of the totals.
+- A reminder in the chat at login, a small "ON" in the menu and a line on the launcher button if profiling was left
+  on.
+- The page remembers your filter and sorting. `/allemano perf` prints the biggest addons in the chat
+  (`/allemano perf mine` for the Allemano ones).
+- The report (`/allemano report`) now includes the memory (and, with profiling on, the average CPU) of the Allemano
+  addons.
+
 ## 0.6.0
 - The Errors page now catches Lua errors from every Allemano addon, also those that keep no error list of
   their own (Arbiter Loot Council, Hush Feed, Hush LFG, Hush Recruit) and errors outside an addon's protected

@@ -56,6 +56,9 @@ local function build()
         border:SetColor(Theme:Color("accent"))
         local unseen = HUB.Registry:UnseenErrors()
         local extra = unseen > 0 and ("\n|cffe8a33d" .. unseen .. " new error" .. (unseen > 1 and "s" or "") .. "|r") or ""
+        if HUB.Perf and HUB.Perf.ProfilingOn() then
+            extra = extra .. "\n|cffe8a33dScript profiling is on (Hub > Performance)|r"
+        end
         W.ShowTooltip(self, "Allemano Hub - your Allemano addons" .. extra)
     end)
     button:SetScript("OnLeave", function()

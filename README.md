@@ -9,5 +9,6 @@ open them or their settings. **Optional** - every Allemano addon works without i
 - Each addon shows its version and whether it is loaded. **Open** and the settings button run the addon's own
   commands. **Get it** shows the CurseForge link for addons you do not have yet (press Ctrl+C to copy it).
 - `/allemano errors` lists the Hub's own recent errors.
+- **Performance** shows the memory and, with script profiling on, the CPU of every loaded addon (`/allemano perf` in the chat).
 
 Install like any addon: the folder must be called `AllemanoHub`. Restart the game the first time.

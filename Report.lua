@@ -44,6 +44,13 @@ function Report.Build()
     add(("  Allemano Hub %s (%s)"):format(tostring(HUB.version), "loaded"))
     known["AllemanoHub"] = true
 
+    -- Memory (and CPU, with profiling on) of the Allemano addons.
+    local ok, perfLines = pcall(HUB.Perf.ReportLines)
+    if ok and perfLines then
+        add("")
+        for _, line in ipairs(perfLines) do add(line) end
+    end
+
     -- Other loaded addons: names only, they help to find conflicts.
     local others = {}
     for i = 1, (safe(numAddOns) or 0) do

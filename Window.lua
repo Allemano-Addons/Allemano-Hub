@@ -24,6 +24,7 @@ local HUB_PAGES = {
     { key = "appearance", label = "Appearance", icon = "appearance" },
     { key = "guild", label = "Guild", icon = "guild" },
     { key = "errors", label = "Errors", icon = "errors", badge = true },
+    { key = "perf", label = "Performance", icon = "sync" },
 }
 
 function Window.MarkPath(entry) return entry.mark and (MEDIA .. "marks\\" .. entry.mark) or nil end
@@ -174,6 +175,10 @@ function Window:RefreshNav()
         row.text:SetTextColor(Theme:Color(selected and "text" or "textDim"))
         if def.badge then
             row.badge:SetText(errors > 0 and tostring(errors) or "")
+        end
+        if def.key == "perf" then
+            -- a reminder that script profiling is on: it costs a little performance
+            row.badge:SetText(HUB.Perf and HUB.Perf.ProfilingOn() and "ON" or "")
         end
         if def.entry then
             local e = byId[def.entry.id] or def.entry
