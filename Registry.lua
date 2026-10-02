@@ -36,6 +36,9 @@ Registry.known = {
     { id = "alc", key = "ALC", folder = "ArbiterLootCouncil", name = "ALC", fullName = "Arbiter Loot Council", label = "LOOT COUNCIL", color = "45C97E", mark = "alc", main = true,
       slash = "/alc", settings = "settings", cf = 1719135,
       blurb = "Loot council: responses, voting and awards" },
+    { id = "asr", key = "ASR", folder = "ArbiterSoftReserve", name = "ASR", fullName = "Arbiter Soft Reserve", label = "SOFT RESERVE", color = "9B7BFF", mark = "asr", main = true,
+      slash = "/asr", openArg = "import", cf = 1721476, sv = "ASR_DB",
+      blurb = "Soft reserve for Arbiter Loot Council: import your list, roll once, hand out everything" },
     { id = "skins", key = "ALLEMANOSKINS", folder = "AllemanoSkins", name = "Skins", label = "SKINS", color = "E55D9E", mark = "skins", main = true, soon = true,
       slash = "/askins",
       blurb = "Gives other addons the Allemano look" },
@@ -197,7 +200,7 @@ function Registry:Run(entry, arg)
     return true
 end
 
-function Registry:Open(entry) return self:Run(entry, "") end
+function Registry:Open(entry) return self:Run(entry, entry.openArg or "") end
 function Registry:OpenSettings(entry) return entry.settings and self:Run(entry, entry.settings) end
 
 function Registry:CurseForgeURL(entry) return entry.cf and (self.URL.curseforge .. entry.cf) or nil end

@@ -52,7 +52,7 @@ writef(here .. "/Media/wow/icon.tga", recolor(source .. "icon.tga", "tile", wr, 
 
 local colors = {
   hush = "3FD0E0", altboard = "5B8CFF", craftboard = "F0763A", art = "E5484D",
-  alc = "45C97E", session = "E8A93B", skins = "E55D9E",
+  alc = "45C97E", session = "E8A93B", skins = "E55D9E", asr = "9B7BFF",
 }
 for id, color in pairs(colors) do
   local r, g, b = hex(color)

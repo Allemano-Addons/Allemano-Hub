@@ -14,6 +14,8 @@
   (`/allemano perf mine` for the Allemano ones).
 - The report (`/allemano report`) now includes the memory (and, with profiling on, the average CPU) of the Allemano
   addons.
+- Arbiter Soft Reserve is in the list of Allemano addons, with its purple mark: in the menu, on the Overview and
+  counted with the Allemano addons on the Performance page. Its Open button opens the import box.
 
 ## 0.6.0
 - The Errors page now catches Lua errors from every Allemano addon, also those that keep no error list of
