@@ -154,6 +154,26 @@ function Registry:Errors()
     return out
 end
 
+-- Every error of every addon (the "All addons" view), newest first. Same errors are grouped with a count:
+-- { addon = { id, name, color }, t (last time), first, count, where, msg, stack, locals, v, session, key }.
+function Registry:AllErrors()
+    local out = {}
+    for _, e in ipairs(HUB.db and HUB.db.log or {}) do
+        local addon
+        for _, k in ipairs(self.known) do
+            if e.folder and strlower(k.folder) == strlower(e.folder) then addon = k end
+        end
+        addon = addon or { id = "x:" .. tostring(e.folder or "game"), name = e.name or e.folder or "Game or unknown", color = "9098A1" }
+        out[#out + 1] = {
+            addon = addon, t = tonumber(e.last) or 0, first = tonumber(e.t) or 0, count = e.count or 1,
+            where = tostring(e.where or "?"), msg = tostring(e.msg or ""), stack = e.stack, locals = e.locals,
+            v = e.v, session = e.session, key = e.sig,
+        }
+    end
+    table.sort(out, function(a, b) return a.t > b.t end)
+    return out
+end
+
 -- Errors that came in since the Errors page was last looked at (the number on the launcher button).
 function Registry:UnseenErrors()
     local seen = HUB.db and tonumber(HUB.db.errorsSeen) or 0
@@ -176,6 +196,7 @@ function Registry:ClearErrors()
     end
     if HUB.errors then wipe(HUB.errors) end
     if HUB.db and HUB.db.captured then wipe(HUB.db.captured) end
+    if HUB.db and HUB.db.log then wipe(HUB.db.log) end
 end
 
 -- Runs a slash command by looking up which SlashCmdList entry owns it (no need to know its name).

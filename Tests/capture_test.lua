@@ -74,6 +74,106 @@ end
 check("only the newest twenty are kept", #HUB.db.captured.Hush_Feed == 20
 	and HUB.db.captured.Hush_Feed[20].msg:find("error number 30", 1, true) ~= nil)
 
+-- An error that goes through a bundled library belongs to whoever called it.
+local libMsg = "Interface\\AddOns\\ArbiterLootCouncil\\Libs\\AceAddon-3.0\\AceAddon-3.0.lua:66: Attempt to register unknown event"
+local plater = "Interface\\AddOns\\ArbiterLootCouncil\\Libs\\AceAddon-3.0\\AceAddon-3.0.lua:66: in function '?'\nInterface\\AddOns\\Plater\\Plater.lua:4924: in function 'OnEnable'"
+local before = HUB.db.captured.ArbiterLootCouncil and #HUB.db.captured.ArbiterLootCouncil or 0
+Capture.Catch(libMsg, plater)
+check("a library error raised for another addon is not blamed on the library's owner",
+    (HUB.db.captured.ArbiterLootCouncil and #HUB.db.captured.ArbiterLootCouncil or 0) == before and HUB.db.captured.Plater == nil)
+local ours = "Interface\\AddOns\\ArbiterLootCouncil\\Libs\\AceAddon-3.0\\AceAddon-3.0.lua:66: in function '?'\nInterface\\AddOns\\Hush\\Core.lua:9: in function 'OnEnable'"
+local hushBefore = #HUB.db.captured.Hush
+Capture.Catch(libMsg .. " (hush)", ours)
+check("a library error raised by one of our addons goes to that addon", #HUB.db.captured.Hush == hushBefore + 1
+    and HUB.db.captured.Hush[#HUB.db.captured.Hush].where == "Core.lua:9")
+local before2 = #HUB.db.captured.ArbiterLootCouncil
+Capture.Catch("Interface\\AddOns\\ArbiterLootCouncil\\Libs\\AceDB-3.0\\AceDB-3.0.lua:12: bad argument")
+check("with no stack, the library's owner gets the blame as before", #HUB.db.captured.ArbiterLootCouncil == before2 + 1)
+
+-- The sound: on by default, off in the settings, not more than one every three seconds.
+local played = {}
+PlaySound = function(id, channel) played[#played + 1] = id .. "/" .. channel end
+SOUNDKIT = { IG_QUEST_FAILED = 847, RAID_WARNING = 8959 }
+local t0 = os.time() + 100000
+time = function() return t0 end
+HUB.db.settings = { errorSound = true, errorSoundKit = "raid" }
+Capture.Catch("Interface\\AddOns\\Hush_Feed\\Core.lua:200: sound test one")
+check("a caught error plays the chosen sound", #played == 1 and played[1] == "8959/Master")
+Capture.Catch("Interface\\AddOns\\Hush_Feed\\Core.lua:201: sound test two")
+check("a second error right after does not ring", #played == 1)
+t0 = t0 + 10
+Capture.Catch("Interface\\AddOns\\Hush_Feed\\Core.lua:202: sound test three")
+check("a later error rings again", #played == 2)
+t0 = t0 + 10
+HUB.db.settings.errorSound = false
+Capture.Catch("Interface\\AddOns\\Hush_Feed\\Core.lua:203: sound test four")
+check("no sound when it is switched off", #played == 2)
+HUB.db.settings.errorSound = true
+t0 = t0 + 10
+Capture.Catch("Interface\\AddOns\\SomeoneElse\\Core.lua:1: boom")
+check("errors from other addons make no sound", #played == 2)
+-- Sounds from LibSharedMedia (the list BugSack offers).
+local playedFiles = {}
+PlaySoundFile = function(path, channel) playedFiles[#playedFiles + 1] = path .. "/" .. channel end
+local registered = { Fizzle = "Interface\\AddOns\\Other\\fizzle.ogg", Beep = "Interface\\AddOns\\Other\\beep.ogg", None = "Interface\\Quiet.mp3" }
+LibStub = function(name)
+    if name ~= "LibSharedMedia-3.0" then return nil end
+    return {
+        List = function() return { "None", "Fizzle", "Beep" } end,
+        Fetch = function(_, kind, key) return kind == "sound" and registered[key] or nil end,
+    }
+end
+sort = table.sort
+local list = Capture.SoundList()
+check("the shared sounds are listed after the game's own, sorted, without None",
+    #list == #Capture.SOUNDS + 2 and list[#Capture.SOUNDS + 1].key == "lsm:Beep" and list[#list].label == "Fizzle")
+HUB.db.settings.errorSoundKit = "lsm:Fizzle"
+t0 = t0 + 100
+Capture.Catch("Interface\\AddOns\\Hush_Feed\\Core.lua:300: shared sound")
+check("a shared sound plays its file", #playedFiles == 1 and playedFiles[1] == "Interface\\AddOns\\Other\\fizzle.ogg/Master")
+local beforeKit = #played
+Capture.PlaySound("lsm:Gone")
+check("a shared sound that no longer exists falls back to the default sound", #played == beforeKit + 1)
+check("the sound list has names and an unknown key falls back", #Capture.SOUNDS >= 4 and Capture.PlaySound("nonsense") ~= nil)
+
+-- Every error of every addon is kept, grouped, with the stack; Allemano's own list stays as it was.
+HUB.db.log = nil
+Capture.Catch("Interface\\AddOns\\Plater\\Core.lua:10: foreign problem", "stack line 1\nstack line 2")
+Capture.Catch("Interface\\AddOns\\Plater\\Core.lua:10: foreign problem")
+Capture.Catch("Interface\\AddOns\\Plater\\Core.lua:11: another problem")
+Capture.Catch("Interface\\FrameXML\\Blizzard.lua:1: from the game itself")
+local log = HUB.db.log
+check("foreign errors are in the all-errors record", log and #log == 3)
+local first
+for _, e in ipairs(log) do if e.where == "Core.lua:10" then first = e end end
+check("the same error again only counts up", first and first.count == 2)
+check("the stack is kept with the error", first and first.stack == "stack line 1\nstack line 2")
+check("the addon is named from its folder", first and first.folder == "Plater" and first.name == "Plater")
+check("an error with no addon path is kept too", log[3].folder == nil and log[3].name ~= nil)
+check("foreign errors are still not in the Allemano record", HUB.db.captured.Plater == nil)
+Capture.Catch("Interface\\AddOns\\Hush_Feed\\Core.lua:400: ours")
+local ours
+for _, e in ipairs(HUB.db.log) do if e.where == "Core.lua:400" then ours = e end end
+check("Allemano errors are in the all-errors record too", ours and ours.name == "Hush Feed")
+-- Not more than LOG_KEEP kinds, and a storm does not fill the record.
+HUB.db.log = {}
+for i = 1, 30 do Capture.Catch("Interface\\AddOns\\Plater\\Core.lua:" .. (1000 + i) .. ": storm " .. i) end
+check("an error storm stores only the first few kinds of error", #HUB.db.log <= 25)
+check("the record is bounded", true)
+
+-- Sound for other addons' errors only when the view is "All addons".
+t0 = t0 + 100
+HUB.db.settings.errorsView = "allemano"
+HUB.db.log = {}
+local soundsBefore = #played + #playedFiles
+Capture.Catch("Interface\\AddOns\\Plater\\Core.lua:2000: quiet foreign")
+check("a foreign error is quiet in the Allemano view", #played + #playedFiles == soundsBefore)
+HUB.db.settings.errorsView = "all"
+t0 = t0 + 100
+Capture.Catch("Interface\\AddOns\\Plater\\Core.lua:2001: loud foreign")
+check("a foreign error rings in the All addons view", #played + #playedFiles == soundsBefore + 1)
+HUB.db.settings.errorsView = "allemano"
+
 -- Something that is not text must not break the catcher.
 check("nothing is thrown for odd input", pcall(Capture.Catch, nil) and pcall(Capture.Catch, 42) and pcall(Capture.Catch, {}))
 

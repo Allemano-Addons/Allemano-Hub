@@ -81,6 +81,7 @@ end)
 HUB.DEFAULTS = {
     font = "Auto", textSize = "M", accentMode = "own", accent = "ECEDEF",
     scale = 1, bgAlpha = 0.97, launcher = true, launcherLocked = false, shareAddons = true,
+    errorSound = true, errorSoundKit = "failed", errorsView = "allemano",
 }
 
 -- Settings changes apply at once: listeners get (key, value).

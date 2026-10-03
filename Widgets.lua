@@ -891,8 +891,38 @@ end
 
 function W.IsMenuOpen() return menu ~= nil and menu:IsShown() end
 
+-- Menus longer than MENU_ROWS rows scroll (mouse wheel, with a thin scroll bar) instead of growing.
+local MENU_ROWS = 16
+
+-- Place the visible rows of the open menu (menu.offset = first visible item) and the scroll bar.
+local function layoutMenu()
+    local count = menu.itemCount or 0
+    local visible = min(count, MENU_ROWS)
+    local maxOffset = max(0, count - visible)
+    menu.offset = max(0, min(menu.offset or 0, maxOffset))
+    for i = 1, count do
+        local b = menu.buttons[i]
+        if i > menu.offset and i <= menu.offset + visible then
+            b:ClearAllPoints()
+            b:SetPoint("TOPLEFT", 1, -4 - (i - menu.offset - 1) * 22)
+            b:SetWidth(menu.contentWidth - 2)
+            b:Show()
+        else
+            b:Hide()
+        end
+    end
+    menu.thumb:SetShown(maxOffset > 0)
+    if maxOffset > 0 then
+        local trackH = visible * 22
+        local thumbH = max(18, trackH * visible / count)
+        menu.thumb:SetHeight(thumbH)
+        menu.thumb:ClearAllPoints()
+        menu.thumb:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -3, -4 - (trackH - thumbH) * menu.offset / maxOffset)
+    end
+end
+
 -- items = { { text, onClick, checked, font }, ... }. Checked items use the accent, font
--- previews the item in that font. Long lists wrap into columns of at most 18 rows.
+-- previews the item in that font. Long lists scroll (the checked item is brought into view).
 function W.OpenMenu(items, anchor)
     closeMenus()
     getCatcher()
@@ -903,6 +933,13 @@ function W.OpenMenu(items, anchor)
         menu:EnableMouse(true)
         W.Surface(menu, "field", 0.98, Theme.radius.control)
         menu.buttons = {}
+        menu.thumb = W.Fill(menu, "textFaint", 0.7, "OVERLAY")
+        menu.thumb:SetWidth(3)
+        menu:EnableMouseWheel(true)
+        menu:SetScript("OnMouseWheel", function(self, delta)
+            self.offset = (self.offset or 0) - delta * 3
+            layoutMenu()
+        end)
     end
     menu:SetFrameLevel(catcher:GetFrameLevel() + 10)
     local width = 120
@@ -929,16 +966,15 @@ function W.OpenMenu(items, anchor)
         width = max(width, b.text:GetStringWidth() + 30)
     end
     for i = #items + 1, #menu.buttons do menu.buttons[i]:Hide() end
-    local perCol = min(#items, 18)
-    local cols = ceil(#items / perCol)
-    for i = 1, #items do
-        local b = menu.buttons[i]
-        local col, row = floor((i - 1) / perCol), (i - 1) % perCol
-        b:ClearAllPoints()
-        b:SetPoint("TOPLEFT", 1 + col * width, -4 - row * 22)
-        b:SetWidth(width - 2)
+    local visible = min(#items, MENU_ROWS)
+    local scrolls = #items > MENU_ROWS
+    menu.itemCount, menu.contentWidth = #items, width
+    menu.offset = 0
+    for i, item in ipairs(items) do
+        if item.checked then menu.offset = i - 1 - floor(visible / 2) break end
     end
-    menu:SetSize(width * cols, perCol * 22 + 8)
+    layoutMenu()
+    menu:SetSize(width + (scrolls and 8 or 0), visible * 22 + 8)
     menu:ClearAllPoints()
     menu:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -2)
     menu:Show()

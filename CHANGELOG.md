@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0 – 2026-10-03
+- The Errors page can show the errors of every addon, not only Allemano's: switch between "Allemano" and "All addons" at the top. The default is still Allemano.
+- In the All addons view the same error is shown once with how many times it happened ("x214"), when it first came, its stack, and the addon it belongs to. Errors that come through a library are put on the addon that called it. Errors that belong to no addon (the game's own) are listed too.
+- The stack is saved with every error (and the local variables, when the game provides them) and shown under the message. "Copy this error" opens a box with the whole error (message, stack and locals) to copy and send.
+- The sound also rings for other addons' errors while the All addons view is selected.
+- A flood of errors cannot fill the memory: at most 150 different errors are kept, and only the first few new kinds each second are stored (the counts of known ones still go up).
+- "Clear all" empties both lists.
+
+## 0.8.0 – 2026-10-03
+- A sound when an Allemano addon hits an error. On the Errors page: Sound on/off, which sound and a Test button. The list has some of the game's own sounds (Quest failed, Raid warning, Ready check, Whisper, Alarm clock) and every sound other addons have registered with LibSharedMedia, the same list BugSack uses (BigWigs, Details and so on). At most one sound every three seconds, and the same error does not ring again for a minute.
+- Long dropdown menus (the sound list, the font list) scroll with the mouse wheel and show a thin scroll bar instead of spreading into many columns. The selected item is brought into view.
+- Errors are blamed on the right addon. An error that goes through a library (such as the Ace3 libraries ALC bundles) used to be put on the addon whose copy of the library it was, even if another addon had caused it. The Hub now looks at the first line that is not a library, in the message and in the stack; if that belongs to another addon the error is ignored, if it belongs to an Allemano addon it goes to that one.
+
 ## 0.7.1 – 2026-10-02
 - Fixed an error when opening the Hub if an Allemano addon without a picture (such as Allemano Arcade) was installed: it now gets a plain icon in the sidebar.
 - Session Tracker is now Allemano Ledger: the Hub knows the new folder and saved-data name, and opens it with /ledger.

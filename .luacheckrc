@@ -22,6 +22,7 @@ read_globals = {
     "GetNumTradeSkills", "GetTradeSkillInfo", "GetTradeSkillLine", "GetTradeSkillItemLink", "GetTradeSkillRecipeLink",
     "GetTradeSkillNumMade", "GetTradeSkillNumReagents", "GetTradeSkillReagentInfo", "GetTradeSkillReagentItemLink",
     "GetTradeSkillTools", "GetTradeSkillCooldown", "GetTradeSkillIcon", "GetTradeSkillSelectionIndex",
+    "SOUNDKIT", "PlaySound", "PlaySoundFile", "debuglocals", "debugstack", "GetTime",
     "C_Item", "IsInGuild", "UnitClass", "GetProfessions", "GetNumCrafts", "GetCraftInfo", "GetCraftDisplaySkillLine", "GetCraftItemLink", "GetCraftRecipeLink",
     "GetCraftNumReagents", "GetCraftReagentInfo", "GetCraftReagentItemLink", "GetCraftSpellFocus",
 }
