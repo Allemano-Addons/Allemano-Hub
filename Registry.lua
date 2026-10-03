@@ -9,7 +9,7 @@ HUB.Registry = Registry
 
 Registry.URL = {
     discord = "https://discord.gg/BvFrTKUAst",
-    site = "https://allemano-site.pages.dev",
+    site = "https://allemano.org",
     curseforge = "https://www.curseforge.com/projects/",
 }
 
