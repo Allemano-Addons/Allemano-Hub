@@ -37,7 +37,7 @@ Registry.known = {
       slash = "/alc", settings = "settings", cf = 1719135,
       blurb = "Loot council: responses, voting and awards" },
     { id = "asr", key = "ASR", folder = "ArbiterSoftReserve", name = "ASR", fullName = "Arbiter Soft Reserve", label = "SOFT RESERVE", color = "9B7BFF", mark = "asr", main = true,
-      slash = "/asr", openArg = "import", cf = 1721476, sv = "ASR_DB",
+      slash = "/asr", openArg = "results", cf = 1721476, sv = "ASR_DB",
       blurb = "Soft reserve for Arbiter Loot Council: import your list, roll once, hand out everything" },
     { id = "skins", key = "ALLEMANOSKINS", folder = "AllemanoSkins", name = "Skins", label = "SKINS", color = "E55D9E", mark = "skins", main = true, soon = true,
       slash = "/askins",

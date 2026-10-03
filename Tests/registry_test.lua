@@ -35,7 +35,7 @@ check("ASR is listed", asr ~= nil)
 check("with the folder and the name of the addon", asr and asr.folder == "ArbiterSoftReserve" and asr.fullName == "Arbiter Soft Reserve")
 check("in purple, with its CurseForge project and its saved data", asr and asr.color == "9B7BFF" and asr.cf == 1721476 and asr.sv == "ASR_DB")
 check("it is a main addon with its own mark", asr and asr.main == true and asr.mark == "asr")
-check("and opens its import box", asr and asr.openArg == "import")
+check("and opens its results window", asr and asr.openArg == "results")
 
 -- It comes after the Loot Council it needs
 local order = {}
@@ -46,7 +46,7 @@ check("it follows ALC in the list", order.asr == order.alc + 1)
 local ran
 SlashCmdList = { ARBITERSOFTRESERVE = function(arg) ran = arg end }
 SLASH_ARBITERSOFTRESERVE1 = "/asr"
-check("Open finds the slash command and passes the argument", HUB.Registry:Open(asr) == true and ran == "import")
+check("Open finds the slash command and passes the argument", HUB.Registry:Open(asr) == true and ran == "results")
 SlashCmdList.ALC = function(arg) ran = "alc:" .. arg end
 local alc = byId.alc
 HUB.Registry:Open(alc)
