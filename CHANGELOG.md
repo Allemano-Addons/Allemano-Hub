@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.9.1 – 2026-10-03
+- Overview is the place for the addons now. Each addon is a row with its version (orange when an update exists), memory use and recorded errors, and buttons: Open, Settings (when it has any) and a "..." menu with What's new, Copy the CurseForge link and Show errors. The list scrolls.
+- The "Addons" list in the left menu is gone (it only showed "Coming in a later version").
+- Guild page: a Hub column shows which version of Allemano Hub each guildmate runs (green is the newest seen in the guild, orange is older).
+- Guild page: "Session" is now "Ledger".
+- Guild page: when there are more addons than fit across the window, a slider under the table moves the columns sideways, so none are cut off at the edge.
+
 ## 0.9.0 – 2026-10-03
 - The Errors page can show the errors of every addon, not only Allemano's: switch between "Allemano" and "All addons" at the top. The default is still Allemano.
 - In the All addons view the same error is shown once with how many times it happened ("x214"), when it first came, its stack, and the addon it belongs to. Errors that come through a library are put on the addon that called it. Errors that belong to no addon (the game's own) are listed too.

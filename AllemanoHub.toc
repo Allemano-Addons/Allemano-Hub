@@ -3,7 +3,7 @@
 ## Notes: One place for your Allemano addons: what is installed and which version, shortcuts to open them, and help when something is wrong. Optional.
 ## Author: Allemano
 ## X-Curse-Project-ID: 1719519
-## Version: 0.9.0
+## Version: 0.9.1
 ## Category: Miscellaneous
 ## SavedVariables: AllemanoHubDB
 ## OptionalDeps: !BugGrabber, EllesmereUI, Hush, Hush_Feed, Hush_LFG, Hush_Recruit, AltBoard, CraftBoard, AllemanoRaidTools, ArbiterLootCouncil, AllemanoLedger, SessionTracker

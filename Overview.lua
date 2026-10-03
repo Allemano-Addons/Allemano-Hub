@@ -5,8 +5,8 @@ local _, HUB = ...
 
 local Theme, W, Registry, Window = HUB.Theme, HUB.W, HUB.Registry, HUB.Window
 
-local CARD_H, CARD_GAP = 72, 10
-local NEWS_W, PAD = 300, 28
+local ROW_H = 54
+local NEWS_W, PAD = 260, 28
 local NEWS_AREA_H = 400 -- window height (680) minus the title bar, the news heading and the bottom margin
 local MONTHS = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
 
@@ -59,57 +59,116 @@ local function refreshBanner(b)
 end
 
 -- ---------------------------------------------------------------------------
--- Addon cards
+-- The addons: one row each with the version (orange when an update exists), memory, errors, and
+-- buttons for Open, Settings and a menu (what's new, the CurseForge link, the errors).
 -- ---------------------------------------------------------------------------
 
-local function createCard(parent)
-    local card = CreateFrame("Button", nil, parent)
-    card:SetHeight(CARD_H)
-    W.Surface(card, "field", 1, Theme.radius.control)
-    card.mark = card:CreateTexture(nil, "ARTWORK")
-    card.mark:SetSize(28, 23)
-    card.mark:SetPoint("LEFT", 16, 0)
-    card.name = W.Text(card, 1, "text")
-    card.name:SetPoint("TOPLEFT", 58, -16)
-    card.name:SetPoint("RIGHT", card, "RIGHT", -82, 0)
-    card.label = W.Text(card, -3, "textDim")
-    card.label:SetPoint("BOTTOMLEFT", 58, 15)
-    card.open = W.Button(card, "Open", "plain", function() if card.entry then Registry:Open(card.entry) end end)
-    card.open:SetPoint("RIGHT", -14, 0)
-    card.open:SetWidth(64)
-    card.status = W.Text(card, -1, "textFaint")
-    card.status:SetPoint("RIGHT", -16, 0)
-    card.status:SetJustifyH("RIGHT")
-    card:SetScript("OnClick", function(self)
+local COL_VERSION, COL_MEMORY, COL_ERRORS = 188, 294, 354
+
+local function openMenu(e, anchor)
+    local items = { { text = e.fullName or e.name, title = true } }
+    local rel = HUB.releases and HUB.releases[e.id]
+    if rel and rel.note and rel.note ~= "" then
+        items[#items + 1] = { text = "What's new in " .. tostring(rel.version or "the latest version"), onClick = function()
+            Window.ShowCopyBox((e.fullName or e.name) .. " " .. tostring(rel.version or ""), rel.note)
+        end }
+    end
+    if e.cf then
+        items[#items + 1] = { text = "Copy the CurseForge link", onClick = function()
+            Window.ShowCopyBox(e.fullName or e.name, Registry:CurseForgeURL(e))
+        end }
+    end
+    if (e.errorCount or 0) > 0 then
+        items[#items + 1] = { text = ("Show %d error%s"):format(e.errorCount, e.errorCount > 1 and "s" or ""), onClick = function()
+            Window:Select("errors")
+        end }
+    end
+    if #items == 1 then items[#items + 1] = { text = "Nothing to show yet" } end
+    W.OpenMenu(items, anchor)
+end
+
+local function createCard(list)
+    local row = CreateFrame("Button", nil, list)
+    row.bg = W.Surface(row, "field", 1, Theme.radius.control)
+    row.mark = row:CreateTexture(nil, "ARTWORK")
+    row.mark:SetSize(28, 23)
+    row.mark:SetPoint("LEFT", 16, 0)
+    row.name = W.Text(row, 1, "text")
+    row.name:SetPoint("TOPLEFT", 58, -9)
+    row.name:SetWidth(COL_VERSION - 66)
+    row.label = W.Text(row, -3, "textDim")
+    row.label:SetPoint("BOTTOMLEFT", 58, 9)
+    row.version = W.Text(row, 0, "text")
+    row.version:SetPoint("LEFT", COL_VERSION, 0)
+    row.version:SetWidth(COL_MEMORY - COL_VERSION - 6) -- a longer text is cut off, never printed over its neighbour
+    row.memory = W.Text(row, -1, "textDim")
+    row.memory:SetPoint("LEFT", COL_MEMORY, 0)
+    row.memory:SetWidth(COL_ERRORS - COL_MEMORY - 6)
+    row.errors = W.Text(row, -1, "warn")
+    row.errors:SetPoint("LEFT", COL_ERRORS, 0)
+    row.errors:SetWidth(64)
+
+    row.more = W.Button(row, "...", "plain", function(self) if row.entry then openMenu(row.entry, self) end end)
+    row.more:SetWidth(30)
+    row.more:SetPoint("RIGHT", -20, 0)
+    row.open = W.Button(row, "Open", "plain", function() if row.entry then Registry:Open(row.entry) end end)
+    row.open:SetWidth(64)
+    row.open:SetPoint("RIGHT", row.more, "LEFT", -6, 0)
+    row.settings = W.IconButton(row, "settings", "Settings", function() if row.entry then Registry:OpenSettings(row.entry) end end)
+    row.settings:SetPoint("RIGHT", row.open, "LEFT", -6, 0)
+
+    row:SetScript("OnEnter", function(self)
+        local e = self.entry
+        if not e then return end
+        local lines = { e.fullName or e.name, e.blurb or "" }
+        if e.update then lines[#lines + 1] = ("Update: %s -> %s (in the CurseForge app)"):format(tostring(e.version), tostring(e.latest)) end
+        if (e.errorCount or 0) > 0 then lines[#lines + 1] = ("%d recorded error%s"):format(e.errorCount, e.errorCount > 1 and "s" or "") end
+        if not e.installed and e.cf then lines[#lines + 1] = "Click for the CurseForge link" end
+        W.ShowTooltip(self, lines)
+    end)
+    row:SetScript("OnLeave", function() W.HideTooltip() end)
+    row:SetScript("OnClick", function(self)
         local e = self.entry
         if e and not e.installed and e.cf then Window.ShowCopyBox(e.fullName or e.name, Registry:CurseForgeURL(e)) end
     end)
-    card:SetScript("OnEnter", function(self)
-        local e = self.entry
-        if e then W.ShowTooltip(self, { e.fullName or e.name, e.blurb or "", e.installed and "" or (e.cf and "Click for the CurseForge link" or "") }) end
-    end)
-    card:SetScript("OnLeave", function() W.HideTooltip() end)
-    return card
+    return row
 end
 
-local function updateCard(card, e)
-    card.entry = e
+local function updateCard(row, e)
+    row.entry = e
     local path = Window.MarkPath(e)
-    if path then card.mark:SetTexture(path) end
-    card.mark:SetAlpha(e.installed and 1 or 0.35)
-    card.name:SetText(e.name)
-    card.name:SetTextColor(Theme:Color(e.installed and "text" or "textDim"))
-    card.label:SetText(e.label or "")
+    if path then row.mark:SetTexture(path) end
+    row.mark:SetAlpha(e.installed and 1 or 0.35)
+    row.name:SetText(e.name)
+    row.name:SetTextColor(Theme:Color(e.installed and "text" or "textDim"))
+    row.label:SetText(e.label or "")
     local r, g, b = hexColor(e.color)
-    card.label:SetTextColor(r, g, b, e.installed and 1 or 0.5)
-    local canOpen = e.loaded and e.slash
-    card.open:SetShown(canOpen and true or false)
-    card.status:SetShown(not canOpen)
+    row.label:SetTextColor(r, g, b, e.installed and 1 or 0.5)
+
     if not e.installed then
-        card.status:SetText(e.soon and "Soon" or "Not installed")
+        row.version:SetText(e.soon and "Soon" or "Not installed")
+        row.version:SetTextColor(Theme:Color("textFaint"))
+    elseif not e.loaded then
+        row.version:SetText("Not loaded")
+        row.version:SetTextColor(Theme:Color("textFaint"))
     else
-        card.status:SetText("Not loaded")
+        row.version:SetText(tostring(e.version or "?"))
+        row.version:SetTextColor(Theme:Color(e.update and "warn" or "good"))
     end
+    row.memory:SetShown(e.loaded and e.memory ~= nil)
+    if e.memory then row.memory:SetText(HUB.Perf.FormatMemory(e.memory)) end
+    local n = e.errorCount or 0
+    row.errors:SetShown(e.installed and true or false)
+    if n > 0 then
+        row.errors:SetText(n == 1 and "1 error" or (n .. " errors"))
+        row.errors:SetTextColor(Theme:Color("warn"))
+    else
+        row.errors:SetText("no errors")
+        row.errors:SetTextColor(Theme:Color("textFaint"))
+    end
+    row.open:SetShown((e.loaded and e.slash) and true or false)
+    row.settings:SetShown((e.loaded and e.settings) and true or false)
+    row.more:SetShown(true)
 end
 
 -- ---------------------------------------------------------------------------
@@ -146,7 +205,7 @@ end
 
 Window.pages.overview = {
     Build = function(parent)
-        local page = { frame = CreateFrame("Frame", nil, parent), cards = {}, news = {} }
+        local page = { frame = CreateFrame("Frame", nil, parent), news = {} }
         local f = page.frame
         f:SetAllPoints()
 
@@ -164,9 +223,9 @@ Window.pages.overview = {
         label("YOUR ADDONS", "TOPLEFT", PAD, -176)
         label("NEWS", "TOPRIGHT", -(PAD + NEWS_W - 30), -176)
 
-        page.cardArea = CreateFrame("Frame", nil, f)
-        page.cardArea:SetPoint("TOPLEFT", PAD, -200)
-        page.cardArea:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -(PAD + NEWS_W + 22), PAD)
+        page.list = W.VirtualList(f, ROW_H, createCard, function(row, e) updateCard(row, e) end)
+        page.list:SetPoint("TOPLEFT", PAD, -200)
+        page.list:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -(PAD + NEWS_W + 22), PAD)
         page.newsArea = CreateFrame("Frame", nil, f)
         page.newsArea:SetPoint("TOPRIGHT", -PAD, -200)
         page.newsArea:SetPoint("BOTTOMRIGHT", -PAD, PAD)
@@ -176,22 +235,18 @@ Window.pages.overview = {
             refreshBanner(self.banner)
 
             local entries = Registry:Main()
-            local w = self.cardArea:GetWidth()
-            local cardW = (w - CARD_GAP) / 2
-            for i, e in ipairs(entries) do
-                local card = self.cards[i]
-                if not card then
-                    card = createCard(self.cardArea)
-                    self.cards[i] = card
-                end
-                card:SetWidth(cardW)
-                card:ClearAllPoints()
-                local col, row = (i - 1) % 2, floor((i - 1) / 2)
-                card:SetPoint("TOPLEFT", col * (cardW + CARD_GAP), -row * (CARD_H + CARD_GAP))
-                updateCard(card, e)
-                card:Show()
+            -- memory per addon and the number of recorded errors, for the rows
+            local memory = {}
+            if HUB.Perf.MemoryAvailable() then
+                for _, r in ipairs(HUB.Perf.Snapshot().rows) do memory[r.folder] = r.memory end
             end
-            for i = #entries + 1, #self.cards do self.cards[i]:Hide() end
+            local errorCount = {}
+            for _, err in ipairs(Registry:Errors()) do errorCount[err.addon.id] = (errorCount[err.addon.id] or 0) + 1 end
+            for _, e in ipairs(entries) do
+                e.memory = memory[e.folder]
+                e.errorCount = errorCount[e.id] or 0
+            end
+            self.list:SetData(entries, true)
 
             -- news: the newest note of each addon, newest first
             local items = {}

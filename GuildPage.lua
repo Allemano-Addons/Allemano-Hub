@@ -6,7 +6,8 @@ local Theme, W, Registry, Window, Version = HUB.Theme, HUB.W, HUB.Registry, HUB.
 
 local ROW_H, PAD = 40, 28
 local NAME_W, COL_W = 210, 90
-local SHORT = { hush = "Hush", altboard = "AltBoard", art = "ART", ["session-tracker"] = "Session", craftboard = "Craft", alc = "ALC", skins = "Skins" }
+local SHORT = { hub = "Hub", hush = "Hush", altboard = "AltBoard", art = "ART", ["session-tracker"] = "Ledger", craftboard = "Craft", alc = "ALC", asr = "ASR", skins = "Skins" }
+local HUB_COLUMN = { id = "hub", name = "Allemano Hub", color = "ECEDEF", isHub = true }
 
 local function hexColor(hex) return Theme.Hex(hex) end
 
@@ -18,9 +19,9 @@ local function ago(t)
     return ("%d d ago"):format(s / 86400)
 end
 
--- The columns: the main addons, in the Registry's order.
+-- The columns: the Hub itself, then the main addons in the Registry's order.
 local function columns()
-    local cols = {}
+    local cols = { HUB_COLUMN }
     for _, e in ipairs(Registry.known) do
         if e.main then cols[#cols + 1] = e end
     end
@@ -46,7 +47,7 @@ local function createRow(list)
     row.sub = W.Text(row, -2, "textFaint")
     row.sub:SetPoint("BOTTOMLEFT", 32, 6)
     row.cells = {}
-    for i = 1, 9 do
+    for i = 1, 16 do
         local c = W.Text(row, -1, "text")
         c:SetJustifyH("LEFT")
         row.cells[i] = c
@@ -66,9 +67,14 @@ local function updateRow(row, m, page)
     row.sub:SetText(sub)
     for i, col in ipairs(page.columns) do
         local cell = row.cells[i]
+        local slot = i - page.scroll -- columns scrolled out to the left or not fitting on the right are hidden
+        if slot < 1 or slot > page.visibleCols then
+            cell:Hide()
+        else
         cell:ClearAllPoints()
-        cell:SetPoint("LEFT", row, "LEFT", NAME_W + (i - 1) * COL_W, 0)
-        local v = m.addons[col.id]
+        cell:SetPoint("LEFT", row, "LEFT", NAME_W + (slot - 1) * COL_W, 0)
+        local v
+        if col.isHub then v = m.hub and tostring(m.hub) or nil else v = m.addons[col.id] end
         if not v then
             cell:SetText("–")
             cell:SetTextColor(Theme:Color("textFaint"))
@@ -84,6 +90,7 @@ local function updateRow(row, m, page)
             end
         end
         cell:Show()
+        end
     end
     for i = #page.columns + 1, #row.cells do row.cells[i]:Hide() end
 end
@@ -94,7 +101,7 @@ end
 
 Window.pages.guild = {
     Build = function(parent)
-        local page = { frame = CreateFrame("Frame", nil, parent), columns = columns(), latest = {} }
+        local page = { frame = CreateFrame("Frame", nil, parent), columns = columns(), latest = {}, scroll = 0, visibleCols = 6 }
         local f = page.frame
         f:SetAllPoints()
 
@@ -125,21 +132,46 @@ Window.pages.guild = {
         local member = W.Text(header, -2, "textFaint")
         member:SetPoint("LEFT", 32, 0)
         member:SetText("MEMBER")
-        page.headings = {}
+        page.headings, page.marks = {}, {}
         for i, col in ipairs(page.columns) do
             local mark = header:CreateTexture(nil, "ARTWORK")
             mark:SetSize(13, 11)
-            mark:SetPoint("LEFT", NAME_W + (i - 1) * COL_W, 0)
-            mark:SetTexture(Window.MarkPath(col))
+            mark:SetTexture(col.isHub and W.MARK or Window.MarkPath(col))
             local fs = W.Text(header, -2, "textFaint")
             fs:SetPoint("LEFT", mark, "RIGHT", 5, 0)
             fs:SetText(strupper(SHORT[col.id] or col.name))
-            page.headings[i] = fs
+            page.marks[i], page.headings[i] = mark, fs
+        end
+
+        -- Place the column headings for the current scroll position (the cells follow in updateRow).
+        function page:LayoutHeadings()
+            for i = 1, #self.columns do
+                local slot = i - self.scroll
+                local show = slot >= 1 and slot <= self.visibleCols
+                self.marks[i]:SetShown(show)
+                self.headings[i]:SetShown(show)
+                if show then
+                    self.marks[i]:ClearAllPoints()
+                    self.marks[i]:SetPoint("LEFT", NAME_W + (slot - 1) * COL_W, 0)
+                end
+            end
         end
 
         page.list = W.VirtualList(f, ROW_H, createRow, function(row, m) updateRow(row, m, page) end)
         page.list:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -4)
-        page.list:SetPoint("BOTTOMRIGHT", -PAD, PAD + 34)
+        page.list:SetPoint("BOTTOMRIGHT", -PAD, PAD + 58)
+
+        -- More addons than fit: a slider under the table moves the columns sideways.
+        page.slider = W.Slider(f, 0, 1, 1, 400, nil, function(value)
+            page.scroll = value
+            page:LayoutHeadings()
+            page.list:Refresh()
+        end)
+        page.slider.label:Hide()
+        page.slider:SetPoint("BOTTOMLEFT", PAD + NAME_W, PAD + 38)
+        page.sliderHint = W.Text(f, -2, "textFaint")
+        page.sliderHint:SetPoint("RIGHT", page.slider, "LEFT", -10, 0)
+        page.sliderHint:SetText("MORE ADDONS")
 
         page.note = W.Text(f, -1, "textFaint")
         page.note:SetWordWrap(true)
@@ -152,6 +184,23 @@ Window.pages.guild = {
             self.share.refresh()
             for _, e in ipairs(Registry:List()) do self.latest[e.id] = e.latest end
             local members = HUB.Guild:Members()
+            -- The newest Hub version seen (mine included) is the green one.
+            self.latest.hub = nil
+            for _, m in ipairs(members) do
+                local v = m.hub and tostring(m.hub) or nil
+                if v and v ~= "" and (not self.latest.hub or Version.Compare(self.latest.hub, v) < 0) then self.latest.hub = v end
+            end
+            -- How many columns fit; the slider covers the rest.
+            local viewW = (self.list:GetWidth() or 0) > 100 and self.list:GetWidth() or 840
+            self.visibleCols = max(1, floor((viewW - NAME_W - 16) / COL_W))
+            local maxScroll = max(0, #self.columns - self.visibleCols)
+            self.scroll = min(self.scroll, maxScroll)
+            self.slider:SetMinMaxValues(0, max(1, maxScroll))
+            self.slider:SetWidth(max(120, viewW - NAME_W - 120))
+            self.slider:Set(self.scroll)
+            self.slider:SetShown(maxScroll > 0)
+            self.sliderHint:SetShown(maxScroll > 0)
+            self:LayoutHeadings()
             local others, online = HUB.Guild:Count()
             if not IsInGuild() then
                 self.summary:SetText("You are not in a guild.")

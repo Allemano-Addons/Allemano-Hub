@@ -69,7 +69,8 @@ DEFAULT_CHAT_FRAME = { AddMessage = function() end }
 UISpecialFrames, SlashCmdList = {}, {}
 GetPhysicalScreenSize = function() return 2560, 1440 end
 C_Timer = { After = function(_, fn) fn() end, NewTicker = function() return { Cancel = function() end } end }
-C_AddOns = { GetAddOnMetadata = function() return "test" end, GetAddOnInfo = function() end, GetNumAddOns = function() return 0 end, IsAddOnLoaded = function() return false end }
+INSTALLED, LOADED = {}, {} -- which addons the fake game has
+C_AddOns = { GetAddOnMetadata = function() return "test" end, GetAddOnInfo = function(folder) return INSTALLED[folder] end, GetNumAddOns = function() return 0 end, IsAddOnLoaded = function(folder) return LOADED[folder] == true end }
 BreakUpLargeNumbers = tostring
 RAID_CLASS_COLORS = {}
 UnitClass = function() return "Druid", "DRUID" end
@@ -98,6 +99,75 @@ assert(HUB.Registry:AllErrors()[1].count == 1 and HUB.Registry:AllErrors()[2].co
 HUB.db.settings.errorsView = "allemano"
 p:Refresh()
 print("errors page builds and refreshes in both views")
+-- The Guild page: a Hub column, "Ledger" for the session tracker, a slider when the columns do not fit.
+IsInGuild = function() return true end
+HUB.Guild = {
+    Members = function()
+        return {
+            { name = "Me", me = true, online = true, class = "DRUID", hub = "0.9.0", addons = { hush = "0.1.35", ["session-tracker"] = "0.7.1" }, t = 0 },
+            { name = "Friend", online = true, class = "MAGE", hub = "0.6.0", addons = { hush = "0.1.33" }, t = 0 },
+        }
+    end,
+    Count = function() return 1, 1 end,
+    Ask = function() return true end,
+    Newest = function() return nil end,
+}
+for _, f in ipairs({ "GuildPage.lua" }) do
+    local chunk, e = loadfile(f); assert(chunk, e)
+    local ok, err = pcall(chunk, "AllemanoHub", HUB)
+    assert(ok, "load " .. f .. ": " .. tostring(err))
+end
+local gp = HUB.Window.pages.guild.Build(mock("Frame"))
+gp:Refresh()
+assert(gp.columns[1].isHub, "the Hub is the first column")
+assert(gp.headings[1]._text == "HUB", "Hub heading: " .. tostring(gp.headings[1]._text))
+local ledgerHeading
+for i, col in ipairs(gp.columns) do if col.id == "session-tracker" then ledgerHeading = gp.headings[i]._text end end
+assert(ledgerHeading == "LEDGER", "the session tracker column is called Ledger: " .. tostring(ledgerHeading))
+assert(gp.latest.hub == "0.9.0", "newest Hub seen: " .. tostring(gp.latest.hub))
+assert(gp.visibleCols >= 1, "visible columns")
+gp.slider:SetValue(2)
+gp.scroll = 2
+gp:LayoutHeadings()
+gp.list:Refresh()
+print("guild page builds, shows Hub and scrolls")
+
+-- The Overview page: a row per addon with version, memory and errors, and the buttons.
+INSTALLED.Hush, INSTALLED.AltBoard, LOADED.Hush = "Hush", "AltBoard", true
+HUB.Perf = {
+    MemoryAvailable = function() return true end,
+    Snapshot = function() return { rows = { { folder = "Hush", memory = 1300 } } } end,
+    FormatMemory = function(kb) return ("%.1f MB"):format(kb / 1024) end,
+    ProfilingOn = function() return false end,
+}
+HUB.releases = { hush = { version = "0.1.36", date = "2026-10-03", note = "Something new" } }
+HUB.db.captured = { Hush = { { t = 100, where = "Core.lua:1", msg = "boom" } } }
+for _, f in ipairs({ "Overview.lua" }) do
+    local chunk, e = loadfile(f); assert(chunk, e)
+    local ok, err = pcall(chunk, "AllemanoHub", HUB)
+    assert(ok, "load " .. f .. ": " .. tostring(err))
+end
+local ov = HUB.Window.pages.overview.Build(mock("Frame"))
+ov:Refresh()
+local hushRow
+for _, row in ipairs(ov.list.rows) do if row.entry and row.entry.id == "hush" then hushRow = row end end
+assert(hushRow, "no Hush row")
+assert(hushRow.entry.memory == 1300 and hushRow.entry.errorCount == 1, "memory and error count reach the row")
+assert(hushRow.version._text == "0.1.35" or hushRow.version._text == "test", "version shown: " .. tostring(hushRow.version._text))
+assert(hushRow.errors._text == "1 error", "errors shown: " .. tostring(hushRow.errors._text))
+local other
+for _, row in ipairs(ov.list.rows) do if row.entry and row.entry.id == "craftboard" then other = row end end
+assert(other and other.version._text == "Not installed", "a missing addon says so")
+-- the menu opens
+local opened
+local realOpen = HUB.W.OpenMenu
+HUB.W.OpenMenu = function(list) opened = list end
+local onclick = scripts[hushRow.more].OnClick
+onclick(hushRow.more)
+HUB.W.OpenMenu = realOpen
+assert(opened and #opened >= 3, "the menu has what's new, the link and the errors")
+print("overview page builds with a row per addon")
+
 local W = HUB.W
 local items = {}
 for i = 1, 60 do items[i] = { text = "Sound " .. i, checked = i == 40, onClick = function() end } end

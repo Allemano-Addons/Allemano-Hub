@@ -139,34 +139,11 @@ local function buildSidebar(parent)
         y = y - NAV_H - 2
     end
 
-    local sep = W.Line(s, "top", "line")
-    sep:ClearAllPoints()
-    sep:SetPoint("TOPLEFT", 16, y - 8)
-    sep:SetPoint("TOPRIGHT", -16, y - 8)
-    sep:SetHeight(Theme:Pixel(s))
-    sectionLabel(s, "ADDONS", y - 26)
-    y = y - 46
-    s.addonsTop = y
     frame.sidebar = s
-end
-
--- The addon rows follow what the Registry lists (built the first time the window opens).
-local function buildAddonRows()
-    local s = frame.sidebar
-    local y = s.addonsTop
-    for _, e in ipairs(Registry:Main()) do
-        local row = navRow(s, { key = "addon:" .. e.id, label = e.name, mark = Window.MarkPath(e), entry = e })
-        row:SetPoint("TOPLEFT", 0, y)
-        row:SetPoint("TOPRIGHT", 0, y)
-        navRows[#navRows + 1] = row
-        y = y - NAV_H - 2
-    end
 end
 
 function Window:RefreshNav()
     local errors = Registry:ErrorCount()
-    local byId = {}
-    for _, e in ipairs(Registry:List()) do byId[e.id] = e end
     for _, row in ipairs(navRows) do
         local def = row.def
         local selected = def.key == current
@@ -180,12 +157,7 @@ function Window:RefreshNav()
             -- a reminder that script profiling is on: it costs a little performance
             row.badge:SetText(HUB.Perf and HUB.Perf.ProfilingOn() and "ON" or "")
         end
-        if def.entry then
-            local e = byId[def.entry.id] or def.entry
-            row.dot:SetShown(e.update and true or false)
-            row.icon:SetAlpha(e.installed and 1 or 0.4)
-            row.text:SetTextColor(Theme:Color(not e.installed and "textFaint" or selected and "text" or "textDim"))
-        elseif def.icon then
+        if def.icon then
             row.icon:SetVertexColor(Theme:Color(selected and "text" or "textDim"))
         end
     end
@@ -311,7 +283,6 @@ local function build()
     version:SetText("v" .. tostring(HUB.version))
 
     buildSidebar(frame)
-    buildAddonRows()
 
     content = CreateFrame("Frame", nil, frame)
     content:SetPoint("TOPLEFT", frame.sidebar, "TOPRIGHT", 0, 0)

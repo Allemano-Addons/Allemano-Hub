@@ -6,11 +6,11 @@ HUB.releases = {
     ["altboard"] = { version = "0.8.3", date = "2026-10-01", note = "/ab errors test records a test error, to check that errors reach the list and Allemano Hub." },
     ["craftboard"] = { version = "0.6.3", date = "2026-09-30", note = "The launcher button and the addon-list icon now look like the other Allemano addons: a 30 px..." },
     ["art"] = { version = "0.16.1", date = "2026-09-30", note = "The launcher button's mark is larger, like AltBoard's and the other Allemano addons." },
-    ["alc"] = { version = "0.3.4-beta", date = "2026-10-01", note = "Credits and licenses added (a CREDITS.md in the addon, and the Ace3 license text next to the..." },
-    ["session-tracker"] = { version = "0.4.0", date = "2026-09-29", note = "Allemano look, like AltBoard and Allemano Raid Tools: rounded panels, the neutral palette, the..." },
+    ["alc"] = { version = "0.4.0-beta", date = "2026-10-02", note = "A small API for other addons to build on Arbiter Loot Council. Arbiter Soft Reserve is the..." },
+    ["session-tracker"] = { version = "0.7.1", date = "2026-10-03", note = "Less memory churn: with the Ledger window open, only the clock and the Now tab are redrawn..." },
     ["hush-feed"] = { version = "0.1.2" },
     ["hush-lfg"] = { version = "0.1.0" },
     ["hush-recruit"] = { version = "0.1.9" },
 }
 
-HUB.releasesGenerated = "2026-10-02"
+HUB.releasesGenerated = "2026-10-03"
